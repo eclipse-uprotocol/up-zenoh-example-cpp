@@ -49,7 +49,9 @@ void signalHandler(int signal) {
 class CustomListener : public UListener {
 
     public:
-
+        /* in this example the same onReceive callback implementation is used to receive
+         * the three different messages , each message is differntiated by the URI
+         * it is possible to provide a different onReceive callback for each topic */
         UStatus onReceive(const UUri& uri,
                           const UPayload& payload,
                           const UAttributes& attributes) const override {
@@ -81,6 +83,8 @@ class CustomListener : public UListener {
         }
 };
 
+/* The sample sub applications demonstrates how to consume data using uTransport -
+ * There are three topics that are received - random number, current time and a counter */
 int main(int argc, char** argv) {
 
     signal(SIGINT, signalHandler);
@@ -88,8 +92,8 @@ int main(int argc, char** argv) {
     UStatus status;
     ZenohUTransport *transport = &ZenohUTransport::instance();
 
+    /* init zenoh utransport */
     status = transport->init();
-    
     if (UCode::OK != status.code()){
         spdlog::error("ZenohUTransport init failed");
         return -1;
@@ -106,12 +110,13 @@ int main(int argc, char** argv) {
         COUNTER_URI_STRING
     };
 
+    /* create URI objects from URI strings */
     std::vector<UUri> uris;
     for (const auto& uriString : uriStrings) {
         uris.push_back(LongUriSerializer::deserialize(uriString));
     }
 
-    /* register listeners */
+    /* register listeners - in this example the same listener is used for three seperate topics */
     for (size_t i = 0; i < uris.size(); ++i) {
         status = transport->registerListener(uris[i], *listeners[i]);
         if (UCode::OK != status.code()){
@@ -132,6 +137,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    /* term zenoh utransport */
     status = transport->term();
     if (UCode::OK != status.code()) {
         spdlog::error("ZenohUTransport term failed");
