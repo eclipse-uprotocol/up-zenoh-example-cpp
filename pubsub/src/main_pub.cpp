@@ -65,6 +65,7 @@ std::uint8_t* getTime() {
 }
 
 std::uint8_t* getRandom() {
+    
     int32_t val = std::rand();
     static std::uint8_t buf[4];
     std::memcpy(buf, &val, sizeof(val));
@@ -73,6 +74,7 @@ std::uint8_t* getRandom() {
 }
 
 std::uint8_t* getCounter() {
+    
     static std::uint8_t counter = 0;
     ++counter;
 
