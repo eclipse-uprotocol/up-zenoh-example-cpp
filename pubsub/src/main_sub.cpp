@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2023 General Motors GTO LLC
+ * Copyright (c) 2024 General Motors GTO LLC
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,154 +19,122 @@
  * specific language governing permissions and limitations
  * under the License.
  * SPDX-FileType: SOURCE
- * SPDX-FileCopyrightText: 2023 General Motors GTO LLC
+ * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <csignal>
+#include <iostream>
+#include <spdlog/spdlog.h>
+#include <unistd.h> // For sleep
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
-#include <up-cpp/uuid/serializer/UuidSerializer.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 
 using namespace uprotocol::utransport;
-using namespace uprotocol::uuid;
-using namespace uprotocol::v1;
 using namespace uprotocol::uri;
 
-bool gTerminate = false; 
+const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
+const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
+const std::string COUNTER_URI_STRING = "/test.app/1/counter";
+
+bool gTerminate = false;
 
 void signalHandler(int signal) {
     if (signal == SIGINT) {
         std::cout << "Ctrl+C received. Exiting..." << std::endl;
-        gTerminate = true; 
+        gTerminate = true;
     }
 }
 
-class TimeListener : public UListener {
-    
-    UStatus onReceive(const UUri &uri, 
-                      const UPayload &payload, 
-                      const UAttributes &attributes) const {
+class CustomListener : public UListener {
 
-        uint64_t timeInMilliseconds;
-      
-        memcpy(&timeInMilliseconds, payload.data(), payload.size());
+    public:
 
-        spdlog::info("time = {}", timeInMilliseconds);
-
-        UStatus status;
-
-        status.set_code(UCode::OK);
-
-        return status;
-    }
-};
-
-class RandomListener : public UListener {
-
-    UStatus onReceive(const UUri &uri, 
-                      const UPayload &payload, 
-                      const UAttributes &attributes) const {
-
-        uint32_t random;
-
-        memcpy(&random, payload.data(), payload.size());
-
-        spdlog::info("random = {}", random);
-
-        UStatus status;
+        UStatus onReceive(const UUri& uri,
+                          const UPayload& payload,
+                          const UAttributes& attributes) const override {
+                                
+            if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
+            
+                const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
         
-        status.set_code(UCode::OK);
+                spdlog::info("time = {}", *timeInMilliseconds);
 
-        return status;
-    }
-};
-
-class CounterListener : public UListener {
-
-    UStatus onReceive(const UUri &uri, 
-                      const UPayload &payload, 
-                      const UAttributes &attributes) const {
-
-        uint8_t counter;
-
-        memcpy(&counter, payload.data(), payload.size());
-
-        spdlog::info("counter = {}", counter);
-
-        UStatus status;
+            } else if (RANDOM_URI_STRING == LongUriSerializer::serialize(uri)) {
         
-        status.set_code(UCode::OK);
+                const uint32_t *random = reinterpret_cast<const uint32_t*>(payload.data());
+        
+                spdlog::info("random = {}", *random);
 
-        return status;
-    }
+            } else if (COUNTER_URI_STRING == LongUriSerializer::serialize(uri)) {
+                
+                const uint8_t *counter = reinterpret_cast<const uint8_t*>(payload.data());
+
+                spdlog::info("counter = {}", *counter);
+            }
+
+            UStatus status;
+
+            status.set_code(UCode::OK);
+
+            return status;
+        }
 };
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 
     signal(SIGINT, signalHandler);
 
-    TimeListener timeListener;
-    RandomListener randomListener;
-    CounterListener counterListener;
+    UStatus status;
+    ZenohUTransport *transport = &ZenohUTransport::instance();
 
-    if (1 < argc) {
-        if (0 == strcmp("-d", argv[1])) {
-            spdlog::set_level(spdlog::level::debug);
+    status = transport->init();
+    
+    if (UCode::OK != status.code()){
+        spdlog::error("ZenohUTransport init failed");
+        return -1;
+    }
+
+    std::vector<std::unique_ptr<CustomListener>> listeners;
+    listeners.emplace_back(std::make_unique<CustomListener>());
+    listeners.emplace_back(std::make_unique<CustomListener>());
+    listeners.emplace_back(std::make_unique<CustomListener>());
+
+    const std::vector<std::string> uriStrings = {
+        TIME_URI_STRING,
+        RANDOM_URI_STRING,
+        COUNTER_URI_STRING
+    };
+
+    std::vector<UUri> uris;
+    for (const auto& uriString : uriStrings) {
+        uris.push_back(LongUriSerializer::deserialize(uriString));
+    }
+
+    /* register listeners */
+    for (size_t i = 0; i < uris.size(); ++i) {
+        status = transport->registerListener(uris[i], *listeners[i]);
+        if (UCode::OK != status.code()){
+            spdlog::error("registerListener failed for {}", uriStrings[i]);
+            return -1;
         }
     }
 
-    if (UCode::OK != ZenohUTransport::instance().init().code()) {
-        spdlog::error("ZenohUTransport::instance().init failed");
-        return -1;
-    }
-
-    auto timeUri = LongUriSerializer::deserialize("/test.app/1/milliseconds");
-    auto randomUri = LongUriSerializer::deserialize("/test.app/1/32bit"); 
-    auto counterUri = LongUriSerializer::deserialize("/test.app/1/counter");
-
-    if (UCode::OK != ZenohUTransport::instance().registerListener(timeUri, timeListener).code()) {
-
-        spdlog::error("ZenohUTransport::instance().registerListener failed");
-        return -1;
-    }
-       
-    if (UCode::OK != ZenohUTransport::instance().registerListener(randomUri, randomListener).code()) {
-
-        spdlog::error("ZenohUTransport::instance().registerListener failed");
-        return -1;
-    }
-
-    if (UCode::OK != ZenohUTransport::instance().registerListener(counterUri, counterListener).code()) {
-
-        spdlog::error("ZenohUTransport::instance().registerListener failed");
-        return -1;
-    }
-
-    while(!gTerminate) {
+    while (!gTerminate) {
         sleep(1);
     }
-   
-    if (UCode::OK != ZenohUTransport::instance().unregisterListener(timeUri, timeListener).code()) {
 
-        spdlog::error("ZenohUTransport::instance().unregisterListener failed");
-        return -1;
+    for (size_t i = 0; i < uris.size(); ++i) {
+        status = transport->unregisterListener(uris[i], *listeners[i]);
+        if (UCode::OK != status.code()){
+            spdlog::error("unregisterListener failed for {}", uriStrings[i]);
+            return -1;
+        }
     }
 
-    if (UCode::OK != ZenohUTransport::instance().unregisterListener(randomUri, randomListener).code()) {
-
-        spdlog::error("ZenohUTransport::instance().unregisterListener failed");
-        return -1;
-    }
-
-    if (UCode::OK != ZenohUTransport::instance().unregisterListener(counterUri, counterListener).code()) {
-
-        spdlog::error("ZenohUTransport::instance().unregisterListener failed");
-        return -1;
-    }
-
-    if (UCode::OK != ZenohUTransport::instance().term().code()) {
-        spdlog::error("ZenohUTransport::instance().term failed");
+    status = transport->term();
+    if (UCode::OK != status.code()) {
+        spdlog::error("ZenohUTransport term failed");
         return -1;
     }
 

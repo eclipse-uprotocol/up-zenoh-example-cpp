@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 General Motors GTO LLC
+ * Copyright (c) 2024 General Motors GTO LLC
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,8 +21,14 @@
  * SPDX-FileCopyrightText: 2023 General Motors GTO LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#include <iostream>
+#include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <csignal>
+#include <unistd.h> // For sleep
+
+#include <spdlog/spdlog.h>
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
@@ -34,109 +40,108 @@ using namespace uprotocol::uri;
 using namespace uprotocol::uuid;
 using namespace uprotocol::v1;
 
-bool gTerminate = false; 
+const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
+const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
+const std::string COUNTER_URI_STRING = "/test.app/1/counter";
+
+bool gTerminate = false;
 
 void signalHandler(int signal) {
     if (signal == SIGINT) {
         std::cout << "Ctrl+C received. Exiting..." << std::endl;
-        gTerminate = true; 
+        gTerminate = true;
     }
 }
 
-static uint8_t* getTime() {
+std::uint8_t* getTime() {
 
     auto currentTime = std::chrono::system_clock::now();
     auto duration = currentTime.time_since_epoch();
-    
     auto timeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
-    static uint8_t buf[8];
-
-    memcpy(buf, &timeMilli, sizeof(timeMilli));
+    static std::uint8_t buf[8];
+    std::memcpy(buf, &timeMilli, sizeof(timeMilli));
 
     return buf;
 }
 
-static uint8_t* getRandom() {
-    int32_t val = rand();
-
-    static uint8_t buf[4];
-
-    memcpy(buf, &val, sizeof(val));
+std::uint8_t* getRandom() {
+    int32_t val = std::rand();
+    static std::uint8_t buf[4];
+    std::memcpy(buf, &val, sizeof(val));
 
     return buf;
 }
 
-static uint8_t* getCounter() {
-    static uint8_t counter = 0;
-
+std::uint8_t* getCounter() {
+    static std::uint8_t counter = 0;
     ++counter;
 
     return &counter;
 }
 
-UCode sendMessage(UUri &uri, 
-                  uint8_t *buffer,
+UCode sendMessage(ZenohUTransport *transport,
+                  UUri &uri,
+                  std::uint8_t *buffer,
                   size_t size) {
-
+   
     auto uuid = Uuidv8Factory::create();
-
+   
     UAttributesBuilder builder(uuid, UMessageType::PUBLISH, UPriority::STANDARD);
-
     UAttributes attributes = builder.build();
-
+   
     UPayload payload(buffer, size, UPayloadType::VALUE);
    
-    if (UCode::OK != ZenohUTransport::instance().send(uri, payload, attributes).code()) {
-        spdlog::error("ZenohUTransport::instance().send failed");
+    UStatus status = transport->send(uri, payload, attributes);
+    if (UCode::OK != status.code()) {
+        spdlog::error("send.send failed");
         return UCode::UNAVAILABLE;
     }
-
     return UCode::OK;
 }
 
 int main(int argc, char **argv) {
 
     signal(SIGINT, signalHandler);
-
-    if (1 < argc) {
-        if (0 == strcmp("-d", argv[1])) {
-            spdlog::set_level(spdlog::level::debug);
-        }
-    }
-
-    if (UCode::OK != ZenohUTransport::instance().init().code()) {
-        spdlog::error("ZenohUTransport::instance().init failed");
+    
+    UStatus status;
+    ZenohUTransport *transport = &ZenohUTransport::instance();
+    
+    status = transport->init();
+    if (UCode::OK != status.code()) {
+        spdlog::error("ZenohUTransport init failed");
         return -1;
     }
     
-    //  /entity/
-    auto timeUri = LongUriSerializer::deserialize("/test.app/1/milliseconds");
-    auto randomUri = LongUriSerializer::deserialize("/test.app/1/32bit"); 
-    auto counterUri = LongUriSerializer::deserialize("/test.app/1/counter");
+    /* create URI objects from string URI*/
+    auto timeUri = LongUriSerializer::deserialize(TIME_URI_STRING);
+    auto randomUri = LongUriSerializer::deserialize(RANDOM_URI_STRING);
+    auto counterUri = LongUriSerializer::deserialize(COUNTER_URI_STRING);
 
     while (!gTerminate) {
-
-         if (UCode::OK != sendMessage(timeUri, getTime(), 8)) {
+        /* send current time in milliseconds */
+        if (UCode::OK != sendMessage(transport, timeUri, getTime(), 8)) {
             spdlog::error("sendMessage failed");
             break;
-         }
+        }
 
-         if (UCode::OK != sendMessage(randomUri, getRandom(), 4)) {
+        /* send random number */
+        if (UCode::OK != sendMessage(transport, randomUri, getRandom(), 4)) {
             spdlog::error("sendMessage failed");
             break;
-         }
+        }
 
-         if (UCode::OK != sendMessage(counterUri, getCounter(), 1)) {
+        /* send counter */
+        if (UCode::OK != sendMessage(transport, counterUri, getCounter(), 1)) {
             spdlog::error("sendMessage failed");
             break;
-         }
-
-         sleep(1);
+        }
+        
+        sleep(1);
     }
 
-    if (UCode::OK != ZenohUTransport::instance().term().code()) {
-        spdlog::error("ZenohUTransport::instance().term() failed");
+    status = transport->term();
+    if (UCode::OK != status.code()) {
+        spdlog::error("ZenohUTransport term failed");
         return -1;
     }
 
