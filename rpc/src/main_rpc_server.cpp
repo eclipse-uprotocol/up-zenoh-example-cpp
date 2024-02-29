@@ -57,7 +57,8 @@ class RpcListener : public UListener {
 
             UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
 
-            /* Build response attributes */
+            /* Build response attributes - the same UUID should be used to send the response 
+             * it is also possible to send the response outside of the callback context */
             UAttributesBuilder builder(attributes.id(), UMessageType::RESPONSE, UPriority::STANDARD);
             UAttributes responseAttributes = builder.build();
 
@@ -66,6 +67,8 @@ class RpcListener : public UListener {
         }
 };
 
+/* The sample RPC server applications demonstrates how to receive RPC requests and send a response back to the client -
+ * The response in this example will be the current time */
 int main(int argc, char** argv) {
 
     RpcListener listener;
@@ -74,7 +77,8 @@ int main(int argc, char** argv) {
 
     UStatus status;
     ZenohUTransport *transport = &ZenohUTransport::instance();
-    
+
+    /* init zenoh utransport */
     status = transport->init();
     if (UCode::OK != status.code()) {
         spdlog::error("ZenohUTransport init failed");
@@ -83,6 +87,7 @@ int main(int argc, char** argv) {
 
     auto rpcUri = LongUriSerializer::deserialize("/test_rpc.app/1/rpc.milliseconds");
 
+    /* register listener to handle RPC requests */
     status = transport->registerListener(rpcUri, listener);
     if (UCode::OK != status.code()) {
         spdlog::error("registerListener failed");
@@ -99,6 +104,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    /* term zenoh utransport */
     status = transport->term();
     if (UCode::OK != status.code()) {
         spdlog::error("ZenohUTransport term failed");
