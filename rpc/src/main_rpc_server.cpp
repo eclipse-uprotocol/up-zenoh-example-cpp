@@ -24,7 +24,7 @@
 #include <iostream>
 #include <chrono>
 #include <csignal>
-#include <unistd.h> // For sleep
+#include <unistd.h>
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
