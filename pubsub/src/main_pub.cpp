@@ -101,20 +101,23 @@ UCode sendMessage(ZenohUTransport *transport,
     return UCode::OK;
 }
 
+/* The sample pub applications demonstrates how to send data using uTransport -
+ * There are three topics that are published - random number, current time and a counter */
 int main(int argc, char **argv) {
 
     signal(SIGINT, signalHandler);
     
     UStatus status;
     ZenohUTransport *transport = &ZenohUTransport::instance();
-    
+
+    /* Initialize zenoh utransport */
     status = transport->init();
     if (UCode::OK != status.code()) {
         spdlog::error("ZenohUTransport init failed");
         return -1;
     }
     
-    /* create URI objects from string URI*/
+    /* Create URI objects from string URI*/
     auto timeUri = LongUriSerializer::deserialize(TIME_URI_STRING);
     auto randomUri = LongUriSerializer::deserialize(RANDOM_URI_STRING);
     auto counterUri = LongUriSerializer::deserialize(COUNTER_URI_STRING);
@@ -141,6 +144,7 @@ int main(int argc, char **argv) {
         sleep(1);
     }
 
+     /* Terminate zenoh utransport */
     status = transport->term();
     if (UCode::OK != status.code()) {
         spdlog::error("ZenohUTransport term failed");
