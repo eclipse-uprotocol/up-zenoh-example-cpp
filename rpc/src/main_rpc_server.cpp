@@ -1,41 +1,17 @@
-/*
- * Copyright (c) 2024 General Motors GTO LLC
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- * SPDX-FileType: SOURCE
- * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
-#include <up-client-zenoh-cpp/rpc/zenohRpcClient.h>
-#include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/uri/serializer/LongUriSerializer.h>
+#include <iostream>
 #include <chrono>
 #include <csignal>
+#include <unistd.h> // For sleep
+#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-cpp/uuid/factory/Uuidv8Factory.h>
+#include <up-cpp/uri/serializer/LongUriSerializer.h>
+#include <spdlog/spdlog.h>
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
-using namespace uprotocol::v1;
 using namespace uprotocol::uri;
 
-
-bool gTerminate = false; 
+bool gTerminate = false;
 
 void signalHandler(int signal) {
     if (signal == SIGINT) {
@@ -46,78 +22,47 @@ void signalHandler(int signal) {
 
 class RpcListener : public UListener {
 
-    UStatus onReceive(const UUri &uri, 
-                      const UPayload &payload, 
-                      const UAttributes &attributes) const {
-        
-        auto currentTime = std::chrono::system_clock::now();
-        auto duration = currentTime.time_since_epoch();
-        
-        auto timeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    public:
+        UStatus onReceive(const UUri& uri,
+                          const UPayload& payload,
+                          const UAttributes& attributes) const override {
+            
+            /* Construct response payload with the current time */
+            auto currentTime = std::chrono::system_clock::now();
+            auto duration = currentTime.time_since_epoch();
+            uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-        static uint8_t buf[8];
+            UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
 
-        memcpy(buf, &timeMilli, sizeof(timeMilli));
+            /* Build response attributes */
+            UAttributesBuilder builder(attributes.id(), UMessageType::RESPONSE, UPriority::STANDARD);
+            UAttributes responseAttributes = builder.build();
 
-        UPayload response(buf, sizeof(buf), UPayloadType::VALUE);
-
-        UAttributesBuilder builder(attributes.id(), UMessageType::RESPONSE, UPriority::STANDARD);
-
-        ZenohUTransport::instance().send(uri, response, builder.build());
-
-        UStatus status;
-        status.set_code(UCode::OK);
-
-        return status;
-    }
-    
+            /* Send the response */
+            return ZenohUTransport::instance().send(uri, responsePayload, responseAttributes);
+        }
 };
 
-UPayload sendRPC(UUri &uri) {
+int main(int argc, char** argv) {
 
-    auto uuid = Uuidv8Factory::create(); 
-
-    UAttributesBuilder builder(uuid, UMessageType::REQUEST, UPriority::STANDARD);
-
-    UAttributes attributes = builder.build();
-
-    uint8_t buffer[1];
-
-    UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
-
-    std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
-
-    if (false == result.valid()) {
-        spdlog::error("future is invalid");
-        return UPayload(nullptr, 0, UPayloadType::UNDEFINED);   
-    }
-
-    result.wait();
-
-    return result.get();
-}
-
-int main(int argc, char **argv)
-{
     RpcListener listener;
 
     signal(SIGINT, signalHandler);
 
-    if (1 < argc) {
-        if (0 == strcmp("-d", argv[1])) {
-            spdlog::set_level(spdlog::level::debug);
-        }
-    }
-
-    if (UCode::OK != ZenohUTransport::instance().init().code()) {
-        spdlog::error("ZenohRpcServer::instance().init failed");
+    UStatus status;
+    ZenohUTransport *transport = &ZenohUTransport::instance();
+    
+    status = transport->init();
+    if (UCode::OK != status.code()) {
+        spdlog::error("ZenohUTransport init failed");
         return -1;
     }
 
     auto rpcUri = LongUriSerializer::deserialize("/test_rpc.app/1/rpc.milliseconds");
 
-    if (UCode::OK != ZenohUTransport::instance().registerListener(rpcUri, listener).code()) {
-        spdlog::error("ZenohRpcServer::instance().registerListener failed");
+    status = transport->registerListener(rpcUri, listener);
+    if (UCode::OK != status.code()) {
+        spdlog::error("registerListener failed");
         return -1;
     }
 
@@ -125,13 +70,15 @@ int main(int argc, char **argv)
         sleep(1);
     }
 
-    if (UCode::OK != ZenohUTransport::instance().unregisterListener(rpcUri, listener).code()) {
-        spdlog::error("ZenohRpcServer::instance().unregisterListener failed");
+    status = transport->unregisterListener(rpcUri, listener);
+    if (UCode::OK != status.code()) {
+        spdlog::error("unregisterListener failed");
         return -1;
     }
 
-    if (UCode::OK != ZenohUTransport::instance().term().code()) {
-        spdlog::error("ZenohUTransport::instance().term failed");
+    status = transport->term();
+    if (UCode::OK != status.code()) {
+        spdlog::error("ZenohUTransport term failed");
         return -1;
     }
 
