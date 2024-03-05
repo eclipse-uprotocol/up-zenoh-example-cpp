@@ -31,9 +31,11 @@
 #include <spdlog/spdlog.h>
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
+#include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-core-api/ustatus.pb.h>
 #include <up-core-api/uri.pb.h>
+#include <up-core-api/uattributes.pb.h>
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
@@ -88,7 +90,7 @@ UCode sendMessage(ZenohUTransport *transport,
    
     auto uuid = Uuidv8Factory::create();
    
-    UAttributesBuilder builder(uuid, UMessageType::PUBLISH, UPriority::STANDARD);
+    UAttributesBuilder builder(uuid, UMessageType::UMESSAGE_TYPE_PUBLISH, UPriority::UPRIORITY_CS1);
     UAttributes attributes = builder.build();
    
     UPayload payload(buffer, size, UPayloadType::VALUE);

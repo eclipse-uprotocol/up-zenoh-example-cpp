@@ -26,6 +26,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <spdlog/spdlog.h>
@@ -59,7 +60,7 @@ class RpcListener : public UListener {
 
             /* Build response attributes - the same UUID should be used to send the response 
              * it is also possible to send the response outside of the callback context */
-            UAttributesBuilder builder(attributes.id(), UMessageType::RESPONSE, UPriority::STANDARD);
+            UAttributesBuilder builder(attributes.id(), UMessageType::UMESSAGE_TYPE_RESPONSE, UPriority::UPRIORITY_CS1);
             UAttributes responseAttributes = builder.build();
 
             /* Send the response */
