@@ -27,11 +27,11 @@
 #include <cstring>
 #include <csignal>
 #include <unistd.h> // For sleep
-
 #include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
+#include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <up-core-api/ustatus.pb.h>
 #include <up-core-api/uri.pb.h>
 
@@ -39,6 +39,7 @@ using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
 using namespace uprotocol::uuid;
 using namespace uprotocol::v1;
+using namespace uprotocol::client;
 
 const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
 const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
@@ -81,19 +82,20 @@ std::uint8_t* getCounter() {
     return &counter;
 }
 
-UCode sendMessage(ZenohUTransport *transport,
+UCode sendMessage(std::shared_ptr<UpZenohClient> transport,
                   UUri &uri,
                   std::uint8_t *buffer,
                   size_t size) {
+     
+    auto builder = UAttributesBuilder::publish(uri, UPriority::UPRIORITY_CS0);
    
-    auto uuid = Uuidv8Factory::create();
-   
-    UAttributesBuilder builder(uuid, UMessageType::PUBLISH, UPriority::STANDARD);
     UAttributes attributes = builder.build();
    
     UPayload payload(buffer, size, UPayloadType::VALUE);
    
-    UStatus status = transport->send(uri, payload, attributes);
+    UMessage message(payload, attributes);
+
+    UStatus status = transport->send(message);
     if (UCode::OK != status.code()) {
         spdlog::error("send.send failed");
         return UCode::UNAVAILABLE;
@@ -103,17 +105,20 @@ UCode sendMessage(ZenohUTransport *transport,
 
 /* The sample pub applications demonstrates how to send data using uTransport -
  * There are three topics that are published - random number, current time and a counter */
-int main(int argc, char **argv) {
+int main(int argc, 
+         char **argv) {
 
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
     
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
 
     /* Initialize zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport init failed");
+    if (nullptr == transport) {
+        spdlog::error("UpZenohClientinit failed");
         return -1;
     }
     
@@ -142,13 +147,6 @@ int main(int argc, char **argv) {
         }
         
         sleep(1);
-    }
-
-     /* Terminate zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
-        return -1;
     }
 
     return 0;
