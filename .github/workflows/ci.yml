@@ -51,7 +51,7 @@ jobs:
         run: |
           git clone https://github.com/MelamudMichael/up-client-zenoh-cpp.git
           cd up-client-zenoh-cpp
-          conan create . -o build_unbundled=True -o zenoh_package=False
+          conan create . -o build_unbundled=True -o zenoh_package=False -e CMAKE_PREFIX_PATH="$HOME/local"
 
       - name: Build up-zenoh-example-cpp
         shell: bash
