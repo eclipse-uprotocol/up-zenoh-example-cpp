@@ -31,11 +31,9 @@
 #include <spdlog/spdlog.h>
 #include <up-client-zenoh-cpp/transport/zenohUTransport.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-core-api/ustatus.pb.h>
 #include <up-core-api/uri.pb.h>
-#include <up-core-api/uattributes.pb.h>
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
@@ -90,7 +88,7 @@ UCode sendMessage(ZenohUTransport *transport,
    
     auto uuid = Uuidv8Factory::create();
    
-    UAttributesBuilder builder(uuid, UMessageType::UMESSAGE_TYPE_PUBLISH, UPriority::UPRIORITY_CS1);
+    UAttributesBuilder builder(uuid, UMessageType::PUBLISH, UPriority::STANDARD);
     UAttributes attributes = builder.build();
    
     UPayload payload(buffer, size, UPayloadType::VALUE);
@@ -105,8 +103,12 @@ UCode sendMessage(ZenohUTransport *transport,
 
 /* The sample pub applications demonstrates how to send data using uTransport -
  * There are three topics that are published - random number, current time and a counter */
-int main(int argc, char **argv) {
+int main(int argc, 
+         char **argv) {
 
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
     
     UStatus status;

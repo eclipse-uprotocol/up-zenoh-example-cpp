@@ -23,16 +23,57 @@
 cmake_minimum_required(VERSION 3.20)
 project(pubsub VERSION 0.1.0 LANGUAGES CXX)
 
-find_package(up-client-zenoh-cpp REQUIRED)
+find_package(spdlog REQUIRED)
 
-# sub
-add_executable(sub src/main_sub.cpp)
-target_link_libraries(sub
-    PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+if(BUILD_UNBUNDLED)
+    find_package(up-client-zenoh-cpp REQUIRED)
+endif()
 
-# pub
-add_executable(pub src/main_pub.cpp)
-target_link_libraries(pub
-    PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+add_definitions(-DSPDLOG_FMT_EXTERNAL)
+
+if(BUILD_UNBUNDLED)
+    # sub
+    add_executable(sub src/main_sub.cpp)
+    target_link_libraries(sub
+        PRIVATE
+            up-client-zenoh-cpp::up-client-zenoh-cpp)
+
+    target_include_directories(sub 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+
+    # pub
+    add_executable(pub src/main_pub.cpp)
+    target_link_libraries(pub
+        PRIVATE
+            up-client-zenoh-cpp::up-client-zenoh-cpp)
+    
+    target_include_directories(pub 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+else() 
+    # sub
+    add_executable(sub src/main_sub.cpp)
+    target_link_libraries(sub
+        PRIVATE
+            up-cpp
+            up-client-zenoh-cpp)
+
+    target_include_directories(sub 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+    # pub
+    add_executable(pub src/main_pub.cpp)
+    target_link_libraries(pub
+        PRIVATE
+            up-cpp
+            up-client-zenoh-cpp)
+    
+    target_include_directories(pub 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+endif()

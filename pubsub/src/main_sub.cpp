@@ -85,8 +85,12 @@ class CustomListener : public UListener {
 
 /* The sample sub applications demonstrates how to consume data using uTransport -
  * There are three topics that are received - random number, current time and a counter */
-int main(int argc, char** argv) {
+int main(int argc, 
+         char** argv) {
 
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
 
     UStatus status;

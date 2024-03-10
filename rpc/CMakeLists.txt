@@ -23,16 +23,57 @@
 cmake_minimum_required(VERSION 3.20)
 project(rpc VERSION 0.1.0 LANGUAGES CXX)
 
-find_package(up-client-zenoh-cpp REQUIRED)
+find_package(spdlog REQUIRED)
 
-# rpc server
-add_executable(rpc_server src/main_rpc_server.cpp)
-target_link_libraries(rpc_server
-    PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+if(BUILD_UNBUNDLED)
+    find_package(up-client-zenoh-cpp REQUIRED)
+endif()
 
-# rpc client
-add_executable(rpc_client src/main_rpc_client.cpp)
-target_link_libraries(rpc_client
-    PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+add_definitions(-DSPDLOG_FMT_EXTERNAL)
+
+if(BUILD_UNBUNDLED)
+    # rpc client
+    add_executable(rpc_client src/main_rpc_client.cpp)
+    target_link_libraries(rpc_client
+        PRIVATE
+            up-client-zenoh-cpp::up-client-zenoh-cpp)
+
+    target_include_directories(rpc_client 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+
+    # rpc server
+    add_executable(rpc_server src/main_rpc_server.cpp)
+    target_link_libraries(rpc_server
+        PRIVATE
+            up-client-zenoh-cpp::up-client-zenoh-cpp)
+    
+    target_include_directories(rpc_server 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+else() 
+    # rpc client
+    add_executable(rpc_client src/main_rpc_client.cpp)
+    target_link_libraries(rpc_client
+        PRIVATE
+            up-cpp
+            up-client-zenoh-cpp)
+
+    target_include_directories(rpc_client 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+    # pub
+    add_executable(rpc_server src/main_rpc_server.cpp)
+    target_link_libraries(rpc_server
+        PRIVATE
+            up-cpp
+            up-client-zenoh-cpp)
+    
+    target_include_directories(rpc_server 
+        PRIVATE
+            ${fmt_INCLUDE_DIR}
+            ${spdlog_INCLUDE_DIR})
+endif()
