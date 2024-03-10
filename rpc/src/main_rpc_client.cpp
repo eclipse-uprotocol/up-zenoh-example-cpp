@@ -69,8 +69,12 @@ UPayload sendRPC(UUri& uri) {
 
 /* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -
  * The response in this example will be the current time */
-int main(int argc, char** argv) {
-   
+int main(int argc, 
+         char** argv) {
+
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
 
     UStatus status;
