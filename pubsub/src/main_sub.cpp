@@ -55,7 +55,9 @@ class CustomListener : public UListener {
         UStatus onReceive(const UUri& uri,
                           const UPayload& payload,
                           const UAttributes& attributes) const override {
-                                
+
+            (void)attributes;
+            
             if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
             
                 const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
