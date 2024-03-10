@@ -75,5 +75,5 @@ jobs:
     needs: build
     if: always()
     steps:
-      - name: Check whether all jobs are pass
+      - name: Check whether all jobs pass
         run: echo '${{ toJson(needs) }}' | jq -e 'all(.result == "success")'
