@@ -1,6 +1,6 @@
 from conan import ConanFile
 
-class HelloWorldRecipe(ConanFile):
+class UpZenohExampleRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps", "CMakeToolchain", "PkgConfigDeps", "VirtualRunEnv", "VirtualBuildEnv"
     options = {
