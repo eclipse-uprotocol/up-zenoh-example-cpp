@@ -32,10 +32,10 @@ add_definitions(-DSPDLOG_FMT_EXTERNAL)
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
     PRIVATE
-        up-client-zenoh-cpp )
+        up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(sub 
-    PRIVATE
+    PUBLIC
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
 
@@ -43,9 +43,9 @@ target_include_directories(sub
 add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
     PRIVATE
-        up-client-zenoh-cpp )
+        up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(pub 
-    PRIVATE
+    PUBLIC
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
