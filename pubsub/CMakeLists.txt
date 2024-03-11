@@ -31,7 +31,7 @@ add_definitions(-DSPDLOG_FMT_EXTERNAL)
 # sub
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
-    PRIVATE
+    PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(sub 
@@ -43,7 +43,7 @@ target_include_directories(sub
 # pub
 add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
-    PRIVATE
+    PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(pub 
