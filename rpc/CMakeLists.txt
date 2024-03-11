@@ -40,8 +40,8 @@ add_definitions(-DSPDLOG_FMT_EXTERNAL)
 add_executable(rpc_client src/main_rpc_client.cpp)
 target_link_libraries(rpc_client
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp
-        ${ZENOH_LIB})
+        ${ZENOH_LIB}
+        up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(rpc_client 
     PUBLIC
@@ -54,8 +54,8 @@ target_include_directories(rpc_client
 add_executable(rpc_server src/main_rpc_server.cpp)
 target_link_libraries(rpc_server
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp
-        ${ZENOH_LIB})
+        ${ZENOH_LIB}
+        up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(rpc_server 
     PUBLIC
