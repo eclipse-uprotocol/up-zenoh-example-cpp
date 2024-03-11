@@ -26,16 +26,21 @@ project(pubsub VERSION 0.1.0 LANGUAGES CXX)
 find_package(spdlog REQUIRED)
 find_package(up-client-zenoh-cpp QUIET)
 find_package(up-cpp QUIET)
-find_library(ZENOH_LIB zenohc)
 
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
+
+if(DEFINED ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LIB $ENV{GITHUB_CICD_ZENOH_PATH})
+else()
+    find_library(ZENOH_LIB zenohc)
+endif() 
 
 # sub
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        $ENV{CMAKE_ZENOH_LIB_PATH})
+        ${ZENOH_LIB})
 
 target_include_directories(sub 
     PUBLIC
@@ -49,7 +54,7 @@ add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        $ENV{CMAKE_ZENOH_LIB_PATH})
+        ${ZENOH_LIB})
 
 target_include_directories(pub 
     PUBLIC

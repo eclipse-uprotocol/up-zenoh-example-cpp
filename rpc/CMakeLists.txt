@@ -26,7 +26,13 @@ project(rpc VERSION 0.1.0 LANGUAGES CXX)
 find_package(spdlog REQUIRED)
 find_package(up-client-zenoh-cpp QUIET)
 find_package(up-cpp QUIET)
-find_library(ZENOH_LIB zenohc)
+
+# this is needed until zenoh will be released to the public conan central
+if(DEFINED ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LIB $ENV{GITHUB_CICD_ZENOH_PATH})
+else()
+    find_library(ZENOH_LIB zenohc)
+endif() 
 
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
@@ -35,7 +41,7 @@ add_executable(rpc_client src/main_rpc_client.cpp)
 target_link_libraries(rpc_client
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        $ENV{CMAKE_ZENOH_LIB_PATH})
+        ${ZENOH_LIB})
 
 target_include_directories(rpc_client 
     PUBLIC
@@ -49,7 +55,7 @@ add_executable(rpc_server src/main_rpc_server.cpp)
 target_link_libraries(rpc_server
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        $ENV{CMAKE_ZENOH_LIB_PATH})
+        ${ZENOH_LIB})
 
 target_include_directories(rpc_server 
     PUBLIC
