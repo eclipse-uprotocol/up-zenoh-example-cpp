@@ -35,7 +35,7 @@ add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        ${ZENOH_LIB})
+        $ENV{CMAKE_ZENOH_LIB_PATH})
 
 target_include_directories(sub 
     PUBLIC
@@ -49,7 +49,7 @@ add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
-        ${ZENOH_LIB})
+        $ENV{CMAKE_ZENOH_LIB_PATH})
 
 target_include_directories(pub 
     PUBLIC
