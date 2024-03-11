@@ -35,7 +35,7 @@ target_link_libraries(rpc_client
         up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(rpc_client 
-    PRIVATE
+    PUBLIC
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
 
@@ -46,6 +46,6 @@ target_link_libraries(rpc_server
         up-client-zenoh-cpp::up-client-zenoh-cpp)
 
 target_include_directories(rpc_server 
-    PRIVATE
+    PUBLIC
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
