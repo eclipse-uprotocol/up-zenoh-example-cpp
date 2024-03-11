@@ -26,6 +26,7 @@ project(rpc VERSION 0.1.0 LANGUAGES CXX)
 find_package(spdlog REQUIRED)
 find_package(up-client-zenoh-cpp QUIET)
 find_package(up-cpp QUIET)
+find_library(ZENOH_LIB zenohc)
 
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
