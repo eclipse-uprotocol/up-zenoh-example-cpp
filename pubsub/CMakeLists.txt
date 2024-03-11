@@ -35,13 +35,6 @@ else()
     find_library(ZENOH_LIB zenohc)
 endif() 
 
-message("MICHAEL ${ZENOH_LIB}")
-if(EXISTS ${ZENOH_LIB})
-    message("MICHAEL File exists")
-else()
-    message("MICHAEL File does not exist")
-endif()
-
 # sub
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
