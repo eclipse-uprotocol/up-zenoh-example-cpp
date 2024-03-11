@@ -53,7 +53,7 @@ jobs:
           export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
           git clone https://github.com/MelamudMichael/up-client-zenoh-cpp.git
           cd up-client-zenoh-cpp
-          conan create . -o build_unbundled=True -o zenoh_package=False
+          conan create .
       - name: Build up-zenoh-example-cpp
         shell: bash
         run: |
