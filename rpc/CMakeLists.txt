@@ -25,6 +25,7 @@ project(rpc VERSION 0.1.0 LANGUAGES CXX)
 
 find_package(spdlog REQUIRED)
 find_package(up-client-zenoh-cpp QUIET)
+find_package(up-cpp QUIET)
 
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
@@ -38,7 +39,8 @@ target_include_directories(rpc_client
     PUBLIC
         $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
-        ${spdlog_INCLUDE_DIR})
+        ${spdlog_INCLUDE_DIR}
+        ${up-cpp_INCLUDE_DIR})
 
 # rpc server
 add_executable(rpc_server src/main_rpc_server.cpp)
@@ -50,4 +52,5 @@ target_include_directories(rpc_server
     PUBLIC
         $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
-        ${spdlog_INCLUDE_DIR})
+        ${spdlog_INCLUDE_DIR}
+        ${up-cpp_INCLUDE_DIR})
