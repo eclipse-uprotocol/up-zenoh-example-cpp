@@ -36,6 +36,7 @@ target_link_libraries(sub
 
 target_include_directories(sub 
     PUBLIC
+        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
 
@@ -47,5 +48,6 @@ target_link_libraries(pub
 
 target_include_directories(pub 
     PUBLIC
+        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR})
