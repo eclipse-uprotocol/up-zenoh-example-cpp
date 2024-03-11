@@ -29,6 +29,7 @@
 #include <up-client-zenoh-cpp/rpc/zenohRpcClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
+#include <up-cpp/transport/builder/UAttributesBuilder.h>
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
@@ -47,7 +48,7 @@ UPayload sendRPC(UUri& uri) {
    
     auto uuid = Uuidv8Factory::create();
    
-    UAttributesBuilder builder(uuid, UMessageType::REQUEST, UPriority::STANDARD);
+    UAttributesBuilder builder(uuid, UMessageType::UMESSAGE_TYPE_REQUEST, UPriority::UPRIORITY_CS0);
     UAttributes attributes = builder.build();
   
     constexpr uint8_t BUFFER_SIZE = 1;
