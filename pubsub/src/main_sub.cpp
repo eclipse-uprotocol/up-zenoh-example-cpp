@@ -32,6 +32,7 @@
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
+using namespace uprotocol::v1;
 
 const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
 const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
@@ -82,6 +83,11 @@ class CustomListener : public UListener {
             status.set_code(UCode::OK);
 
             return status;
+        }
+
+        UStatus onReceive(UMessage &message) const override {
+            
+      
         }
 };
 

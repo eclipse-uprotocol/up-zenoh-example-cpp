@@ -66,6 +66,11 @@ class RpcListener : public UListener {
             /* Send the response */
             return ZenohUTransport::instance().send(uri, responsePayload, responseAttributes);
         }
+
+         UStatus onReceive(UMessage &message) const override {
+            
+      
+        }
 };
 
 /* The sample RPC server applications demonstrates how to receive RPC requests and send a response back to the client -

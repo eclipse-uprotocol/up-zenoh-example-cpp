@@ -54,18 +54,18 @@ UPayload sendRPC(UUri& uri) {
     constexpr uint8_t BUFFER_SIZE = 1;
     uint8_t buffer[BUFFER_SIZE] = {0}; 
 
-    UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
-    /* send the RPC request , a future is returned from invokeMethod */
-    std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
+    // UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
+    // /* send the RPC request , a future is returned from invokeMethod */
+    // std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
 
-    if (!result.valid()) {
-        spdlog::error("Future is invalid");
-        return UPayload(nullptr, 0, UPayloadType::UNDEFINED);   
-    }
-    /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
-    result.wait();
+    // if (!result.valid()) {
+    //     spdlog::error("Future is invalid");
+    //     return UPayload(nullptr, 0, UPayloadType::UNDEFINED);   
+    // }
+    // /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
+    // result.wait();
 
-    return result.get();
+    // return result.get();
 }
 
 /* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -
