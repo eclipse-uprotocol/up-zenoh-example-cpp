@@ -33,7 +33,7 @@ jobs:
       - name: Create up-cpp Conan package
         shell: bash
         run: |
-          git clone https://github.com/MelamudMichael/up-cpp.git
+          git clone https://github.com/eclipse-uprotocol/up-cpp.git
           cd up-cpp
           git submodule update --init --recursive
           conan create . --build=missing
@@ -51,7 +51,7 @@ jobs:
         run: |
           export CMAKE_PREFIX_PATH="$HOME/local"
           export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
-          git clone https://github.com/MelamudMichael/up-client-zenoh-cpp.git
+          git clone https://github.com/eclipse-uprotocol/up-client-zenoh-cpp.git
           cd up-client-zenoh-cpp
           conan create .
       - name: Build up-zenoh-example-cpp
