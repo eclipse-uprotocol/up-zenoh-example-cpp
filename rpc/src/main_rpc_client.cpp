@@ -34,6 +34,7 @@
 using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
 using namespace uprotocol::uri;
+using namespace uprotocol::v1;
 
 bool gTerminate = false;
 
@@ -44,28 +45,23 @@ void signalHandler(int signal) {
     }
 }
 
-UPayload sendRPC(UUri& uri) {
-   
-    auto uuid = Uuidv8Factory::create();
-   
-    UAttributesBuilder builder(uuid, UMessageType::UMESSAGE_TYPE_REQUEST, UPriority::UPRIORITY_CS0);
-    UAttributes attributes = builder.build();
-  
-    constexpr uint8_t BUFFER_SIZE = 1;
-    uint8_t buffer[BUFFER_SIZE] = {0}; 
+UMessage sendRPC(UUri& uri) {
+    
+    UPayload payload(nullptr, 0, UPayloadType::REFERENCE);
+    CallOptions options;
 
-    // UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
-    // /* send the RPC request , a future is returned from invokeMethod */
-    // std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
+    options.set_priority(UPriority::UPRIORITY_CS4);
+    /* send the RPC request , a future is returned from invokeMethod */
+    std::future<UMessage> result = ZenohRpcClient::instance().invokeMethod(uri, payload, options);
 
-    // if (!result.valid()) {
-    //     spdlog::error("Future is invalid");
-    //     return UPayload(nullptr, 0, UPayloadType::UNDEFINED);   
-    // }
-    // /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
-    // result.wait();
+    if (!result.valid()) {
+        spdlog::error("Future is invalid");
+        return UMessage();   
+    }
+    /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
+    result.wait();
 
-    // return result.get();
+    return result.get();
 }
 
 /* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -
@@ -96,8 +92,8 @@ int main(int argc,
 
         uint64_t milliseconds = 0;
 
-        if (response.data() != nullptr && response.size() >= sizeof(uint64_t)) {
-            memcpy(&milliseconds, response.data(), sizeof(uint64_t));
+        if (response.payload().data() != nullptr && response.payload().size() >= sizeof(uint64_t)) {
+            memcpy(&milliseconds, response.payload().data(), sizeof(uint64_t));
             spdlog::info("Received = {}", milliseconds);
         }
 
