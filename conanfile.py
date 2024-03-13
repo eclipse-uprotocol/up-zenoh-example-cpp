@@ -21,7 +21,7 @@ class UpZenohExampleRecipe(ConanFile):
 
     def requirements(self):
         self.requires("spdlog/1.13.0")
-        self.requires("up-cpp/0.1.5.1-dev")
+        self.requires("up-cpp/0.1.1-dev")
         self.requires("up-client-zenoh-cpp/0.1.2-dev")
         self.requires("protobuf/3.21.12" + ("@cross/cross" if self.options.build_cross_compiling else ""))
             
