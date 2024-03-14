@@ -26,7 +26,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/rpc/zenohRpcClient.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 
@@ -55,7 +55,7 @@ UPayload sendRPC(UUri& uri) {
 
     UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
+    std::future<UPayload> result = upZenohClient::instance().invokeMethod(uri, payload, attributes);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
@@ -78,7 +78,7 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohRpcClient *rpcClient = &ZenohRpcClient::instance();
+    upZenohClient *rpcClient = &upZenohClient::instance();
 
     /* init RPC client */
     status = rpcClient->init();

@@ -25,7 +25,7 @@
 #include <chrono>
 #include <csignal>
 #include <unistd.h>
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <spdlog/spdlog.h>
@@ -63,7 +63,7 @@ class RpcListener : public UListener {
             UAttributes responseAttributes = builder.build();
 
             /* Send the response */
-            return ZenohUTransport::instance().send(uri, responsePayload, responseAttributes);
+            return upZenohClient::instance().send(uri, responsePayload, responseAttributes);
         }
 };
 
@@ -80,12 +80,12 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    upZenohClient *transport = &upZenohClient::instance();
 
     /* init zenoh utransport */
     status = transport->init();
     if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport init failed");
+        spdlog::error("upZenohClient init failed");
         return -1;
     }
 
@@ -111,7 +111,7 @@ int main(int argc,
     /* term zenoh utransport */
     status = transport->term();
     if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
+        spdlog::error("upZenohClient term failed");
         return -1;
     }
 
