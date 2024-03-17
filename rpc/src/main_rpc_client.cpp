@@ -35,6 +35,7 @@ using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
 using namespace uprotocol::uri;
 using namespace uprotocol::v1;
+using namespace uprotocol::rpc;
 
 bool gTerminate = false;
 
@@ -45,18 +46,17 @@ void signalHandler(int signal) {
     }
 }
 
-UMessage sendRPC(UUri& uri) {
+RpcResponse sendRPC(UUri& uri) {
     
     UPayload payload(nullptr, 0, UPayloadType::REFERENCE);
     CallOptions options;
 
     options.set_priority(UPriority::UPRIORITY_CS4);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<UMessage> result = ZenohRpcClient::instance().invokeMethod(uri, payload, options);
+    std::future<RpcResponse> result = ZenohRpcClient::instance().invokeMethod(uri, payload, options);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
-        return UMessage();   
     }
     /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
     result.wait();
@@ -92,8 +92,8 @@ int main(int argc,
 
         uint64_t milliseconds = 0;
 
-        if (response.payload().data() != nullptr && response.payload().size() >= sizeof(uint64_t)) {
-            memcpy(&milliseconds, response.payload().data(), sizeof(uint64_t));
+        if (response.message.payload().data() != nullptr && response.message.payload().size() >= sizeof(uint64_t)) {
+            memcpy(&milliseconds, response.message.payload().data(), sizeof(uint64_t));
             spdlog::info("Received = {}", milliseconds);
         }
 

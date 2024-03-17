@@ -87,6 +87,7 @@ class CustomListener : public UListener {
 
         UStatus onReceive(UMessage &message) const override {
             
+            (void) message;
             std::cout << "onReceive" << std::endl;
       
         }
