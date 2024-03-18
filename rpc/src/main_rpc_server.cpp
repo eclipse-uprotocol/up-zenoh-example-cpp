@@ -47,30 +47,9 @@ void signalHandler(int signal) {
 class RpcListener : public UListener {
 
     public:
-        UStatus onReceive(const UUri& uri,
-                          const UPayload& payload,
-                          const UAttributes& attributes) const override {
-            
-            /* Construct response payload with the current time */
-            auto currentTime = std::chrono::system_clock::now();
-            auto duration = currentTime.time_since_epoch();
-            uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
-            UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
-
-            /* Build response attributes - the same UUID should be used to send the response 
-             * it is also possible to send the response outside of the callback context */
-            UAttributesBuilder builder(attributes.id(), UMessageType::UMESSAGE_TYPE_RESPONSE, UPriority::UPRIORITY_CS0);
-            UAttributes responseAttributes = builder.build();
-
-            /* Send the response */
-            return ZenohUTransport::instance().send(uri, responsePayload, responseAttributes);
-        }
-
+       
          UStatus onReceive(UMessage &message) const override {
-            
-            std::cout << "OnReceive" << std::endl;
-                  /* Construct response payload with the current time */
+            /* Construct response payload with the current time */
             auto currentTime = std::chrono::system_clock::now();
             auto duration = currentTime.time_since_epoch();
             uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();

@@ -50,45 +50,35 @@ void signalHandler(int signal) {
 class CustomListener : public UListener {
 
     public:
-        /* in this example the same onReceive callback implementation is used to receive
-         * the three different messages , each message is differntiated by the URI
-         * it is possible to provide a different onReceive callback for each topic */
-        UStatus onReceive(const UUri& uri,
-                          const UPayload& payload,
-                          const UAttributes& attributes) const override {
 
-            (void)attributes;
+        UStatus onReceive(UMessage &message) const override {
             
-            if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
+            (void)message;
             
-                const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
+            // if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
+            
+            //     const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
         
-                spdlog::info("time = {}", *timeInMilliseconds);
+            //     spdlog::info("time = {}", *timeInMilliseconds);
 
-            } else if (RANDOM_URI_STRING == LongUriSerializer::serialize(uri)) {
+            // } else if (RANDOM_URI_STRING == LongUriSerializer::serialize(uri)) {
         
-                const uint32_t *random = reinterpret_cast<const uint32_t*>(payload.data());
+            //     const uint32_t *random = reinterpret_cast<const uint32_t*>(payload.data());
         
-                spdlog::info("random = {}", *random);
+            //     spdlog::info("random = {}", *random);
 
-            } else if (COUNTER_URI_STRING == LongUriSerializer::serialize(uri)) {
+            // } else if (COUNTER_URI_STRING == LongUriSerializer::serialize(uri)) {
                 
-                const uint8_t *counter = reinterpret_cast<const uint8_t*>(payload.data());
+            //     const uint8_t *counter = reinterpret_cast<const uint8_t*>(payload.data());
 
-                spdlog::info("counter = {}", *counter);
-            }
+            //     spdlog::info("counter = {}", *counter);
+            // }
 
             UStatus status;
 
             status.set_code(UCode::OK);
 
             return status;
-        }
-
-        UStatus onReceive(UMessage &message) const override {
-            
-            (void) message;
-            std::cout << "onReceive" << std::endl;
       
         }
 };
