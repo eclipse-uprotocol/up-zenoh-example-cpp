@@ -55,7 +55,7 @@ UPayload sendRPC(UUri& uri) {
 
     UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<UPayload> result = upZenohClient::instance().invokeMethod(uri, payload, attributes);
+    std::future<UPayload> result = upZenohClient::instance()->invokeMethod(uri, payload, attributes);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
@@ -78,11 +78,10 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    upZenohClient *rpcClient = &upZenohClient::instance();
+    std::shared_ptr<upZenohClient> rpcClient = upZenohClient::instance();
 
     /* init RPC client */
-    status = rpcClient->init();
-    if (UCode::OK != status.code()) {
+    if (nullptr == rpcClient) {
         spdlog::error("init failed");
         return -1;
     }
@@ -101,13 +100,6 @@ int main(int argc,
         }
 
         sleep(1);
-    }
-
-    /* term RPC client */
-    status = rpcClient->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("term failed");
-        return -1;
     }
 
     return 0;

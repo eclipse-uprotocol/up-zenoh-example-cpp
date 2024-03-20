@@ -96,11 +96,10 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    upZenohClient *transport = &upZenohClient::instance();
+    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
 
     /* init zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()){
+    if (nullptr == transport){
         spdlog::error("upZenohClient init failed");
         return -1;
     }
@@ -141,13 +140,6 @@ int main(int argc,
             spdlog::error("unregisterListener failed for {}", uriStrings[i]);
             return -1;
         }
-    }
-
-    /* term zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("upZenohClient term failed");
-        return -1;
     }
 
     return 0;

@@ -63,7 +63,7 @@ class RpcListener : public UListener {
             UAttributes responseAttributes = builder.build();
 
             /* Send the response */
-            return upZenohClient::instance().send(uri, responsePayload, responseAttributes);
+            return upZenohClient::instance()->send(uri, responsePayload, responseAttributes);
         }
 };
 
@@ -80,11 +80,10 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    upZenohClient *transport = &upZenohClient::instance();
+    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
 
     /* init zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()) {
+    if (nullptr == transport) {
         spdlog::error("upZenohClient init failed");
         return -1;
     }
@@ -93,6 +92,7 @@ int main(int argc,
 
     /* register listener to handle RPC requests */
     status = transport->registerListener(rpcUri, listener);
+
     if (UCode::OK != status.code()) {
         spdlog::error("registerListener failed");
         return -1;
@@ -105,13 +105,6 @@ int main(int argc,
     status = transport->unregisterListener(rpcUri, listener);
     if (UCode::OK != status.code()) {
         spdlog::error("unregisterListener failed");
-        return -1;
-    }
-
-    /* term zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("upZenohClient term failed");
         return -1;
     }
 
