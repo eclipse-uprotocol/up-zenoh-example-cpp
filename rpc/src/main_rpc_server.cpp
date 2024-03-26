@@ -62,8 +62,10 @@ class RpcListener : public UListener {
             UAttributes responseAttributes = builder.build();
 
             auto rpcUri = LongUriSerializer::deserialize("/test_rpc.app/1/rpc.milliseconds");
+
+            UMessage messageResp(responsePayload, responseAttributes);
             /* Send the response */
-            return ZenohUTransport::instance().send(rpcUri, responsePayload, responseAttributes);
+            return ZenohUTransport::instance().send(messageResp);
         }
 };
 
