@@ -89,7 +89,7 @@ UCode sendMessage(ZenohUTransport *transport,
    
     auto uuid = Uuidv8Factory::create();
    
-    UAttributesBuilder builder(uuid, UMessageType::UMESSAGE_TYPE_PUBLISH, UPriority::UPRIORITY_CS0);
+    UAttributesBuilder builder(uri, uuid, UMessageType::UMESSAGE_TYPE_PUBLISH, UPriority::UPRIORITY_CS0);
     UAttributes attributes = builder.build();
    
     UPayload payload(buffer, size, UPayloadType::VALUE);
