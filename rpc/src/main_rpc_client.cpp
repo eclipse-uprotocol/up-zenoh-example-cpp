@@ -26,7 +26,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/rpc/zenohRpcClient.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-cpp/transport/builder/UAttributesBuilder.h>
@@ -75,11 +75,10 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohRpcClient *rpcClient = &ZenohRpcClient::instance();
+    std::shared_ptr<upZenohClient> rpcClient = upZenohClient::instance();
 
     /* init RPC client */
-    status = rpcClient->init();
-    if (UCode::OK != status.code()) {
+    if (nullptr == rpcClient) {
         spdlog::error("init failed");
         return -1;
     }
@@ -98,13 +97,6 @@ int main(int argc,
         }
 
         sleep(1);
-    }
-
-    /* term RPC client */
-    status = rpcClient->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("term failed");
-        return -1;
     }
 
     return 0;

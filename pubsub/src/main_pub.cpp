@@ -29,7 +29,7 @@
 #include <unistd.h> // For sleep
 
 #include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-cpp/transport/builder/UAttributesBuilder.h>
@@ -82,7 +82,7 @@ std::uint8_t* getCounter() {
     return &counter;
 }
 
-UCode sendMessage(ZenohUTransport *transport,
+UCode sendMessage(std::shared_ptr<upZenohClient> transport,
                   UUri &uri,
                   std::uint8_t *buffer,
                   size_t size) {
@@ -115,12 +115,11 @@ int main(int argc,
     signal(SIGINT, signalHandler);
     
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
 
     /* Initialize zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport init failed");
+    if (nullptr == transport) {
+        spdlog::error("upZenohClientinit failed");
         return -1;
     }
     
@@ -149,13 +148,6 @@ int main(int argc,
         }
         
         sleep(1);
-    }
-
-     /* Terminate zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
-        return -1;
     }
 
     return 0;
