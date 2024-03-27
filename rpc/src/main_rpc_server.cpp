@@ -56,13 +56,10 @@ class RpcListener : public UListener {
             uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
             UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
-
+           
+            auto builder = UAttributesBuilder::response(message.attributes().source(), message.attributes().sink(), UPriority::UPRIORITY_CS0, message.attributes().id());
             /* Build response attributes - the same UUID should be used to send the response 
              * it is also possible to send the response outside of the callback context */
-            UAttributesBuilder builder(message.attributes().source(),
-                                       message.attributes().id(), 
-                                       UMessageType::UMESSAGE_TYPE_RESPONSE, 
-                                       UPriority::UPRIORITY_CS0);
 
             UAttributes responseAttributes = builder.build();
 

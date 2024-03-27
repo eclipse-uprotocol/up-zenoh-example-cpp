@@ -27,7 +27,6 @@
 #include <cstring>
 #include <csignal>
 #include <unistd.h> // For sleep
-
 #include <spdlog/spdlog.h>
 #include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
@@ -87,10 +86,9 @@ UCode sendMessage(std::shared_ptr<upZenohClient> transport,
                   UUri &uri,
                   std::uint8_t *buffer,
                   size_t size) {
+     
+    auto builder = UAttributesBuilder::publish(uri, UPriority::UPRIORITY_CS0);
    
-    auto uuid = Uuidv8Factory::create();
-   
-    UAttributesBuilder builder(uri, uuid, UMessageType::UMESSAGE_TYPE_PUBLISH, UPriority::UPRIORITY_CS0);
     UAttributes attributes = builder.build();
    
     UPayload payload(buffer, size, UPayloadType::VALUE);
