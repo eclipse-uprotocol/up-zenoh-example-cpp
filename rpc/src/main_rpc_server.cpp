@@ -25,7 +25,7 @@
 #include <chrono>
 #include <csignal>
 #include <unistd.h>
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <spdlog/spdlog.h>
@@ -63,7 +63,7 @@ class RpcListener : public UListener {
             UAttributes responseAttributes = builder.build();
 
             /* Send the response */
-            return ZenohUTransport::instance().send(uri, responsePayload, responseAttributes);
+            return upZenohClient::instance()->send(uri, responsePayload, responseAttributes);
         }
 };
 
@@ -80,12 +80,11 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
 
     /* init zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport init failed");
+    if (nullptr == transport) {
+        spdlog::error("upZenohClient init failed");
         return -1;
     }
 
@@ -93,6 +92,7 @@ int main(int argc,
 
     /* register listener to handle RPC requests */
     status = transport->registerListener(rpcUri, listener);
+
     if (UCode::OK != status.code()) {
         spdlog::error("registerListener failed");
         return -1;
@@ -105,13 +105,6 @@ int main(int argc,
     status = transport->unregisterListener(rpcUri, listener);
     if (UCode::OK != status.code()) {
         spdlog::error("unregisterListener failed");
-        return -1;
-    }
-
-    /* term zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
         return -1;
     }
 
