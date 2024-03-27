@@ -35,7 +35,6 @@ jobs:
         run: |
           git clone https://github.com/eclipse-uprotocol/up-cpp.git
           cd up-cpp
-          git clone -b uprotocol-core-api-1.5.6 https://github.com/eclipse-uprotocol/up-core-api.git
           git submodule update --init --recursive
           conan create . --build=missing
 
@@ -44,24 +43,27 @@ jobs:
         run: |
           git clone https://github.com/eclipse-zenoh/zenoh-c.git
           cd zenoh-c && mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
           cmake --build . --target install --config Release -- -j
-
+          
       - name: Create up-client-zenoh-cpp Conan package
         shell: bash
         run: |
+          export CMAKE_PREFIX_PATH="$HOME/local"
+          export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
           git clone https://github.com/eclipse-uprotocol/up-client-zenoh-cpp.git
           cd up-client-zenoh-cpp
-          conan create . --build=missing
-
+          conan create .
       - name: Build up-zenoh-example-cpp
         shell: bash
         run: |
-          mkdir build_samples
-          cd build_samples
-          conan install ../
-          cmake ../ -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-          cmake --build . 
+          export GITHUB_CICD_ZENOH_PATH="$HOME/local/lib/libzenohc.a"
+          export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
+          mkdir build
+          cd build
+          conan install ..
+          cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release 
+          cmake --build .
 
   
   # NOTE: In GitHub repository settings, the "Require status checks to pass

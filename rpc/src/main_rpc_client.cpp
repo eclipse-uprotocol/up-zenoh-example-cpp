@@ -26,7 +26,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/rpc/zenohRpcClient.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 
@@ -55,7 +55,7 @@ UPayload sendRPC(UUri& uri) {
 
     UPayload payload(buffer, sizeof(buffer), UPayloadType::VALUE);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<UPayload> result = ZenohRpcClient::instance().invokeMethod(uri, payload, attributes);
+    std::future<UPayload> result = upZenohClient::instance()->invokeMethod(uri, payload, attributes);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
@@ -69,16 +69,19 @@ UPayload sendRPC(UUri& uri) {
 
 /* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -
  * The response in this example will be the current time */
-int main(int argc, char** argv) {
-   
+int main(int argc, 
+         char** argv) {
+
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohRpcClient *rpcClient = &ZenohRpcClient::instance();
+    std::shared_ptr<upZenohClient> rpcClient = upZenohClient::instance();
 
     /* init RPC client */
-    status = rpcClient->init();
-    if (UCode::OK != status.code()) {
+    if (nullptr == rpcClient) {
         spdlog::error("init failed");
         return -1;
     }
@@ -97,13 +100,6 @@ int main(int argc, char** argv) {
         }
 
         sleep(1);
-    }
-
-    /* term RPC client */
-    status = rpcClient->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("term failed");
-        return -1;
     }
 
     return 0;

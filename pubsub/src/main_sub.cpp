@@ -27,7 +27,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unistd.h> // For sleep
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 
 using namespace uprotocol::utransport;
@@ -55,7 +55,9 @@ class CustomListener : public UListener {
         UStatus onReceive(const UUri& uri,
                           const UPayload& payload,
                           const UAttributes& attributes) const override {
-                                
+
+            (void)attributes;
+            
             if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
             
                 const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
@@ -85,17 +87,20 @@ class CustomListener : public UListener {
 
 /* The sample sub applications demonstrates how to consume data using uTransport -
  * There are three topics that are received - random number, current time and a counter */
-int main(int argc, char** argv) {
+int main(int argc, 
+         char** argv) {
 
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
 
     /* init zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()){
-        spdlog::error("ZenohUTransport init failed");
+    if (nullptr == transport){
+        spdlog::error("upZenohClient init failed");
         return -1;
     }
 
@@ -135,13 +140,6 @@ int main(int argc, char** argv) {
             spdlog::error("unregisterListener failed for {}", uriStrings[i]);
             return -1;
         }
-    }
-
-    /* term zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
-        return -1;
     }
 
     return 0;
