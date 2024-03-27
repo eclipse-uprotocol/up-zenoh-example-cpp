@@ -33,6 +33,7 @@
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
 using namespace uprotocol::v1;
+using namespace uprotocol::client;
 
 const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
 const std::string RANDOM_URI_STRING = "/test.app/1/32bit";

@@ -36,6 +36,7 @@ using namespace uprotocol::uuid;
 using namespace uprotocol::uri;
 using namespace uprotocol::v1;
 using namespace uprotocol::rpc;
+using namespace uprotocol::client;
 
 bool gTerminate = false;
 
@@ -48,20 +49,20 @@ void signalHandler(int signal) {
 
 RpcResponse sendRPC(UUri& uri) {
     
-    UPayload payload(nullptr, 0, UPayloadType::REFERENCE);
-    CallOptions options;
+    // UPayload payload(nullptr, 0, UPayloadType::REFERENCE);
+    // CallOptions options;
 
-    options.set_priority(UPriority::UPRIORITY_CS4);
-    /* send the RPC request , a future is returned from invokeMethod */
-    std::future<RpcResponse> result = ZenohRpcClient::instance().invokeMethod(uri, payload, options);
+    // options.set_priority(UPriority::UPRIORITY_CS4);
+    // /* send the RPC request , a future is returned from invokeMethod */
+    // std::future<RpcResponse> result = ZenohRpcClient::instance().invokeMethod(uri, payload, options);
 
-    if (!result.valid()) {
-        spdlog::error("Future is invalid");
-    }
-    /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
-    result.wait();
+    // if (!result.valid()) {
+    //     spdlog::error("Future is invalid");
+    // }
+    // /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
+    // result.wait();
 
-    return result.get();
+    // return result.get();
 }
 
 /* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -

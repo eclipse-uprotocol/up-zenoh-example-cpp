@@ -34,6 +34,7 @@
 using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
 using namespace uprotocol::uri;
+using namespace uprotocol::client;
 
 bool gTerminate = false;
 
@@ -62,11 +63,12 @@ class RpcListener : public UListener {
                                        message.attributes().id(), 
                                        UMessageType::UMESSAGE_TYPE_RESPONSE, 
                                        UPriority::UPRIORITY_CS0);
+
             UAttributes responseAttributes = builder.build();
 
             UMessage messageResp(responsePayload, responseAttributes);
             /* Send the response */
-            return ZenohUTransport::instance().send(messageResp);
+            return upZenohClient::instance()->send(messageResp);
         }
 };
 
