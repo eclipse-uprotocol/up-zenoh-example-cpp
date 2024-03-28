@@ -65,7 +65,7 @@ class RpcListener : public UListener {
 
             UMessage messageResp(responsePayload, responseAttributes);
             /* Send the response */
-            return upZenohClient::instance()->send(messageResp);
+            return UpZenohClient::instance()->send(messageResp);
         }
 };
 
@@ -82,11 +82,11 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
 
     /* init zenoh utransport */
     if (nullptr == transport) {
-        spdlog::error("upZenohClient init failed");
+        spdlog::error("UpZenohClient init failed");
         return -1;
     }
 

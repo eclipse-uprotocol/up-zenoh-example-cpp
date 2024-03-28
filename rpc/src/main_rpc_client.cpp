@@ -55,7 +55,7 @@ RpcResponse sendRPC(UUri& uri) {
 
     options.set_priority(UPriority::UPRIORITY_CS4);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<RpcResponse> result = upZenohClient::instance()->invokeMethod(uri, payload, options);
+    std::future<RpcResponse> result = UpZenohClient::instance()->invokeMethod(uri, payload, options);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
@@ -77,7 +77,7 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<upZenohClient> rpcClient = upZenohClient::instance();
+    std::shared_ptr<UpZenohClient> rpcClient = UpZenohClient::instance();
 
     /* init RPC client */
     if (nullptr == rpcClient) {

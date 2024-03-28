@@ -82,7 +82,7 @@ std::uint8_t* getCounter() {
     return &counter;
 }
 
-UCode sendMessage(std::shared_ptr<upZenohClient> transport,
+UCode sendMessage(std::shared_ptr<UpZenohClient> transport,
                   UUri &uri,
                   std::uint8_t *buffer,
                   size_t size) {
@@ -114,11 +114,11 @@ int main(int argc,
     signal(SIGINT, signalHandler);
     
     UStatus status;
-    std::shared_ptr<upZenohClient> transport = upZenohClient::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
 
     /* Initialize zenoh utransport */
     if (nullptr == transport) {
-        spdlog::error("upZenohClientinit failed");
+        spdlog::error("UpZenohClientinit failed");
         return -1;
     }
     
