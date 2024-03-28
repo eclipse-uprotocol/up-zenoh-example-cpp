@@ -27,11 +27,13 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unistd.h> // For sleep
-#include <up-client-zenoh-cpp/transport/zenohUTransport.h>
+#include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uri/serializer/LongUriSerializer.h>
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
+using namespace uprotocol::v1;
+using namespace uprotocol::client;
 
 const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
 const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
@@ -49,28 +51,28 @@ void signalHandler(int signal) {
 class CustomListener : public UListener {
 
     public:
-        /* in this example the same onReceive callback implementation is used to receive
-         * the three different messages , each message is differntiated by the URI
-         * it is possible to provide a different onReceive callback for each topic */
-        UStatus onReceive(const UUri& uri,
-                          const UPayload& payload,
-                          const UAttributes& attributes) const override {
-                                
+
+        UStatus onReceive(UMessage &message) const override {
+            
+            (void)message;
+            
+            UUri uri = message.attributes().source();
+
             if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
             
-                const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(payload.data());
+                const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(message.payload().data());
         
                 spdlog::info("time = {}", *timeInMilliseconds);
 
             } else if (RANDOM_URI_STRING == LongUriSerializer::serialize(uri)) {
         
-                const uint32_t *random = reinterpret_cast<const uint32_t*>(payload.data());
+                const uint32_t *random = reinterpret_cast<const uint32_t*>(message.payload().data());
         
                 spdlog::info("random = {}", *random);
 
             } else if (COUNTER_URI_STRING == LongUriSerializer::serialize(uri)) {
                 
-                const uint8_t *counter = reinterpret_cast<const uint8_t*>(payload.data());
+                const uint8_t *counter = reinterpret_cast<const uint8_t*>(message.payload().data());
 
                 spdlog::info("counter = {}", *counter);
             }
@@ -80,22 +82,26 @@ class CustomListener : public UListener {
             status.set_code(UCode::OK);
 
             return status;
+      
         }
 };
 
 /* The sample sub applications demonstrates how to consume data using uTransport -
  * There are three topics that are received - random number, current time and a counter */
-int main(int argc, char** argv) {
+int main(int argc, 
+         char** argv) {
 
+    (void)argc;
+    (void)argv;
+    
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    ZenohUTransport *transport = &ZenohUTransport::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
 
     /* init zenoh utransport */
-    status = transport->init();
-    if (UCode::OK != status.code()){
-        spdlog::error("ZenohUTransport init failed");
+    if (nullptr == transport){
+        spdlog::error("UpZenohClient init failed");
         return -1;
     }
 
@@ -135,13 +141,6 @@ int main(int argc, char** argv) {
             spdlog::error("unregisterListener failed for {}", uriStrings[i]);
             return -1;
         }
-    }
-
-    /* term zenoh utransport */
-    status = transport->term();
-    if (UCode::OK != status.code()) {
-        spdlog::error("ZenohUTransport term failed");
-        return -1;
     }
 
     return 0;
