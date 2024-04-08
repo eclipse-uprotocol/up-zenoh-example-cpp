@@ -27,9 +27,10 @@
 #include <unistd.h>
 #include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <spdlog/spdlog.h>
+
+#include "common.h"
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uuid;
@@ -91,7 +92,7 @@ int main(int argc,
         return -1;
     }
 
-    auto rpcUri = LongUriSerializer::deserialize("/test_rpc.app/1/rpc.milliseconds");
+    auto rpcUri = getRpcUri();
 
     /* register listener to handle RPC requests */
     status = transport->registerListener(rpcUri, listener);

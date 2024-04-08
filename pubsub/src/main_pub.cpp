@@ -30,20 +30,17 @@
 #include <spdlog/spdlog.h>
 #include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/uri/serializer/LongUriSerializer.h>
 #include <up-cpp/transport/builder/UAttributesBuilder.h>
 #include <up-core-api/ustatus.pb.h>
 #include <up-core-api/uri.pb.h>
+
+#include "common.h"
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
 using namespace uprotocol::uuid;
 using namespace uprotocol::v1;
 using namespace uprotocol::client;
-
-const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
-const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
-const std::string COUNTER_URI_STRING = "/test.app/1/counter";
 
 bool gTerminate = false;
 
@@ -123,9 +120,9 @@ int main(int argc,
     }
     
     /* Create URI objects from string URI*/
-    auto timeUri = LongUriSerializer::deserialize(TIME_URI_STRING);
-    auto randomUri = LongUriSerializer::deserialize(RANDOM_URI_STRING);
-    auto counterUri = LongUriSerializer::deserialize(COUNTER_URI_STRING);
+    auto timeUri = getTimeUri();
+    auto randomUri = getRandomUri();
+    auto counterUri = getCounterUri();
 
     while (!gTerminate) {
         /* send current time in milliseconds */

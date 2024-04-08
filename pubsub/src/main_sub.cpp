@@ -28,16 +28,13 @@
 #include <spdlog/spdlog.h>
 #include <unistd.h> // For sleep
 #include <up-client-zenoh-cpp/client/upZenohClient.h>
-#include <up-cpp/uri/serializer/LongUriSerializer.h>
+
+#include "common.h"
 
 using namespace uprotocol::utransport;
 using namespace uprotocol::uri;
 using namespace uprotocol::v1;
 using namespace uprotocol::client;
-
-const std::string TIME_URI_STRING = "/test.app/1/milliseconds";
-const std::string RANDOM_URI_STRING = "/test.app/1/32bit";
-const std::string COUNTER_URI_STRING = "/test.app/1/counter";
 
 bool gTerminate = false;
 
@@ -58,19 +55,19 @@ class CustomListener : public UListener {
             
             UUri uri = message.attributes().source();
 
-            if (TIME_URI_STRING == LongUriSerializer::serialize(uri)) {
+            if (getTimeUri().resource().id() == uri.resource().id()) {
             
                 const uint64_t  *timeInMilliseconds = reinterpret_cast<const uint64_t*>(message.payload().data());
         
                 spdlog::info("time = {}", *timeInMilliseconds);
 
-            } else if (RANDOM_URI_STRING == LongUriSerializer::serialize(uri)) {
+            } else if (getRandomUri().resource().id() == uri.resource().id()) {
         
                 const uint32_t *random = reinterpret_cast<const uint32_t*>(message.payload().data());
         
                 spdlog::info("random = {}", *random);
 
-            } else if (COUNTER_URI_STRING == LongUriSerializer::serialize(uri)) {
+            } else if (getCounterUri().resource().id() == uri.resource().id()) {
                 
                 const uint8_t *counter = reinterpret_cast<const uint8_t*>(message.payload().data());
 
@@ -110,23 +107,18 @@ int main(int argc,
     listeners.emplace_back(std::make_unique<CustomListener>());
     listeners.emplace_back(std::make_unique<CustomListener>());
 
-    const std::vector<std::string> uriStrings = {
-        TIME_URI_STRING,
-        RANDOM_URI_STRING,
-        COUNTER_URI_STRING
+    /* create URI objects */
+    const std::vector<UUri> uris {
+        getTimeUri(),
+        getRandomUri(),
+        getCounterUri()
     };
-
-    /* create URI objects from URI strings */
-    std::vector<UUri> uris;
-    for (const auto& uriString : uriStrings) {
-        uris.push_back(LongUriSerializer::deserialize(uriString));
-    }
 
     /* register listeners - in this example the same listener is used for three seperate topics */
     for (size_t i = 0; i < uris.size(); ++i) {
         status = transport->registerListener(uris[i], *listeners[i]);
         if (UCode::OK != status.code()){
-            spdlog::error("registerListener failed for {}", uriStrings[i]);
+            spdlog::error("registerListener failed for {}", uris[i].resource().name());
             return -1;
         }
     }
@@ -138,7 +130,7 @@ int main(int argc,
     for (size_t i = 0; i < uris.size(); ++i) {
         status = transport->unregisterListener(uris[i], *listeners[i]);
         if (UCode::OK != status.code()){
-            spdlog::error("unregisterListener failed for {}", uriStrings[i]);
+            spdlog::error("unregisterListener failed for {}", uris[i].resource().name());
             return -1;
         }
     }
