@@ -65,6 +65,10 @@ target_include_directories(rpc_client
         ${spdlog_INCLUDE_DIR}
         ${up-cpp_INCLUDE_DIR})
 
+target_include_directories(rpc_client 
+    PRIVATE
+        include)
+
 # rpc server
 add_executable(rpc_server src/main_rpc_server.cpp)
 target_link_libraries(rpc_server
@@ -81,3 +85,7 @@ target_include_directories(rpc_server
         ${fmt_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIR}
         ${up-cpp_INCLUDE_DIR})
+
+target_include_directories(rpc_server 
+    PRIVATE
+        include)
