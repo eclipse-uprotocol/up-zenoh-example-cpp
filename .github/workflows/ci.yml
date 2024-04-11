@@ -30,6 +30,14 @@ jobs:
       - name: Install Rust toolchain
         run: rustup component add rustfmt clippy
 
+      - name: Create up-cpp Conan package
+        shell: bash
+        run: |
+          git clone https://github.com/eclipse-uprotocol/up-cpp.git
+          cd up-cpp
+          git submodule update --init --recursive
+          conan create . --build=missing
+
       - name: Build and install Zenoh-C
         shell: bash
         run: |
@@ -38,27 +46,25 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
           cmake --build . --target install --config Release -- -j
           
-      - name: build evertyhing 
+      - name: Create up-client-zenoh-cpp Conan package
         shell: bash
         run: |
           export CMAKE_PREFIX_PATH="$HOME/local"
           export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
+          git clone https://github.com/eclipse-uprotocol/up-client-zenoh-cpp.git
+          cd up-client-zenoh-cpp
+          conan create .
+      - name: Build up-zenoh-example-cpp
+        shell: bash
+        run: |
           export GITHUB_CICD_ZENOH_PATH="$HOME/local/lib/libzenohc.a"
           export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
-          git clone https://github.com/eclipse-uprotocol/up-cpp.git
-          git clone https://github.com/eclipse-uprotocol/up-client-zenoh-cpp.git
-          git clone https://github.com/eclipse-uprotocol/up-zenoh-example-cpp.git
-          cd up-cpp
-          git submodule update --init --recursive
-          cd ../
-          echo -e "cmake_minimum_required(VERSION 3.20.0)\nproject(ultifi)\n\nadd_subdirectory(up-cpp)\nadd_subdirectory(up-client-zenoh-cpp)\nadd_subdirectory(up-zenoh-example-cpp)" > CMakeLists.txt
           mkdir build
           cd build
-          conan install ../up-client-zenoh-cpp -o build_unbundled=False --install-folder=.
-          ls .
-          cmake ../ -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/local/lib/"
+          conan install ..
+          cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release 
           cmake --build .
-  
+
   
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
