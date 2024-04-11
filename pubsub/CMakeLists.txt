@@ -54,9 +54,9 @@ message("MICHAEL ${ZENOH_LIBRARY}")
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
-        ${ZENOH_LIBRARY}
+        ${ZENOH_LIBRARY})
 
 target_include_directories(sub 
     PUBLIC
@@ -69,9 +69,9 @@ target_include_directories(sub
 add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
-        ${ZENOH_LIBRARY}
+        ${ZENOH_LIBRARY})
 
 target_include_directories(pub 
     PUBLIC
