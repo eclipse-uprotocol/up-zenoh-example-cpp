@@ -41,7 +41,7 @@ jobs:
       - name: Build and install Zenoh-C
         shell: bash
         run: |
-          ll /usr/local/include
+          ls /usr/local/include
           sudo chmod 777 /usr/local/include
           git clone https://github.com/eclipse-zenoh/zenoh-c.git
           cd zenoh-c && mkdir -p build && cd build 
