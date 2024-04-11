@@ -51,14 +51,8 @@ jobs:
           cd up-cpp
           git submodule update --init --recursive
           cd ../
-          cat << EOF > CMakeLists.txt
-            cmake_minimum_required(VERSION 3.20.0)
-            project(ultifi)
-              
-            add_subdirectory(up-cpp)
-            add_subdirectory(up-client-zenoh-cpp)
-            add_subdirectory(up-zenoh-example-cpp)
-            EOF
+          ln -s up-client-zenoh-cpp/conanfile.py conanfile.py
+          echo -e "cmake_minimum_required(VERSION 3.20.0)\nproject(ultifi)\n\nadd_subdirectory(up-cpp)\nadd_subdirectory(up-client-zenoh-cpp)\nadd_subdirectory(up-zenoh-example-cpp)" > CMakeLists.txt
           mkdir build
           cd build
           conan install ../ -o build_unbundled=False
