@@ -54,7 +54,6 @@ jobs:
           git clone https://github.com/eclipse-uprotocol/up-client-zenoh-cpp.git
           cd up-client-zenoh-cpp
           conan create .
-          
       - name: Build up-zenoh-example-cpp
         shell: bash
         run: |
