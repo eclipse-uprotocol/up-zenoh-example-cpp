@@ -51,11 +51,10 @@ jobs:
           cd up-cpp
           git submodule update --init --recursive
           cd ../
-          ln -s up-client-zenoh-cpp/conanfile.py conanfile.py
           echo -e "cmake_minimum_required(VERSION 3.20.0)\nproject(ultifi)\n\nadd_subdirectory(up-cpp)\nadd_subdirectory(up-client-zenoh-cpp)\nadd_subdirectory(up-zenoh-example-cpp)" > CMakeLists.txt
           mkdir build
           cd build
-          conan install ../ -o build_unbundled=False
+          conan install ../up-client-zenoh-cpp -o build_unbundled=False
           cmake ../ -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/local/lib/"
           cmake --build .
   
