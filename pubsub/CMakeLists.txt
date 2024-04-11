@@ -35,12 +35,28 @@ else()
     find_library(ZENOH_LIB zenohc)
 endif() 
 
+if(BUILD_UNBUNDLED)
+    find_package(zenohc REQUIRED)
+    set(ZENOH_LIBRARY zenohc::lib)
+else()
+    if(CROSS_COMPILE)
+        find_package(zenohc REQUIRED)
+	set(ZENOH_LIBRARY zenohc::lib)
+    else()
+        find_library(ZENOH_LIB zenohc)
+	set(ZENOH_LIBRARY ${ZENOH_LIB})
+    endif()
+endif()
+
+message("MICHAEL ${ZENOH_LIBRARY}")
+
 # sub
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
     PUBLIC
-        ${ZENOH_LIB}
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        up-client-zenoh-cpp::up-client-zenoh-cpp
+    PRIVATE
+        ${ZENOH_LIBRARY})
 
 target_include_directories(sub 
     PUBLIC
@@ -53,8 +69,9 @@ target_include_directories(sub
 add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
     PUBLIC
-        ${ZENOH_LIB}
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        up-client-zenoh-cpp::up-client-zenoh-cpp
+    PRIVATE
+        ${ZENOH_LIBRARY})
 
 target_include_directories(pub 
     PUBLIC
