@@ -57,7 +57,7 @@ jobs:
       - name: Build up-zenoh-example-cpp
         shell: bash
         run: |
-          export GITHUB_CICD_ZENOH_PATH="$HOME/local/lib/libzenohc.a"
+          export GITHUB_CICD_ZENOH_PATH="$HOME/local/lib"
           export CMAKE_ZENOH_INCLUDE_PATH="$HOME/local/include"
           mkdir build
           cd build

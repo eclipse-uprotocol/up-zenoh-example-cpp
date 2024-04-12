@@ -30,25 +30,23 @@ find_package(up-cpp QUIET)
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 if(DEFINED ENV{GITHUB_CICD_ZENOH_PATH})
-    set(ZENOH_LIB $ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LINK_FLAGS -Wl,--no-as-needed)
+    set(LIB_SEARCH -L$ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LIBRARY -lzenohc)
 else()
-    find_library(ZENOH_LIB zenohc)
-endif() 
 
-if(BUILD_UNBUNDLED)
-    find_package(zenohc REQUIRED)
-    set(ZENOH_LIBRARY zenohc::lib)
-else()
-    if(CROSS_COMPILE)
+    if(BUILD_UNBUNDLED)
         find_package(zenohc REQUIRED)
-	set(ZENOH_LIBRARY zenohc::lib)
+        set(ZENOH_LIBRARY zenohc::lib)
     else()
-        find_library(ZENOH_LIB zenohc)
-	set(ZENOH_LIBRARY ${ZENOH_LIB})
+        if(CROSS_COMPILE)
+            find_package(zenohc REQUIRED)
+            set(ZENOH_LIBRARY zenohc::lib)
+        else()
+            find_library(ZENOH_LIBRARY zenohc)
+        endif()
     endif()
 endif()
-
-message("MICHAEL ${ZENOH_LIBRARY}")
 
 # sub
 add_executable(sub src/main_sub.cpp)
@@ -56,9 +54,11 @@ target_link_libraries(sub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
+        ${LIB_SEARCH}
+        ${ZENOH_LINK_FLAGS}
         ${ZENOH_LIBRARY})
 
-target_include_directories(sub 
+target_include_directories(sub
     PUBLIC
         $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
@@ -71,9 +71,11 @@ target_link_libraries(pub
     PUBLIC
         up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
+        ${LIB_SEARCH}
+        ${ZENOH_LINK_FLAGS}
         ${ZENOH_LIBRARY})
 
-target_include_directories(pub 
+target_include_directories(pub
     PUBLIC
         $ENV{CMAKE_ZENOH_INCLUDE_PATH}
         ${fmt_INCLUDE_DIR}
