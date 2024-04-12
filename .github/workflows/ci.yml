@@ -7,7 +7,7 @@ on:
     branches: ["**"]
   workflow_call:
   workflow_dispatch:
-  
+
 jobs:
   build-zenoh-c:
     name: Build Zenoh-C
@@ -15,6 +15,7 @@ jobs:
     env:
       Zenoh_C_Repo: https://github.com/eclipse-zenoh/zenoh-c.git
       Zenoh_C_Cache_PFX: libzenohc
+      Zenoh_C_Build_Rev: HEAD
     outputs:
       Zenoh_C_Cache: ${{ env.Zenoh_C_Cache_PFX }}-${{ steps.zenoh-c-head.outputs.Zenoh_C_HEAD }}
 
@@ -22,7 +23,7 @@ jobs:
       - name: Check remote head hash
         id: zenoh-c-head
         shell: bash
-        run: '{ echo -n "Zenoh_C_HEAD="; git ls-remote "$Zenoh_C_Repo" HEAD | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
+        run: '{ echo -n "Zenoh_C_HEAD="; git ls-remote "$Zenoh_C_Repo" "$Zenoh_C_Build_Rev" | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
 
       - name: Cache compiled zenoh-c library
         id: cache-libzenohc
@@ -63,6 +64,7 @@ jobs:
     env:
       UP_CPP_Repo: https://github.com/eclipse-uprotocol/up-cpp.git
       UP_CPP_Cache_PFX: up-cpp-conan2
+      UP_CPP_Build_Rev: HEAD
     outputs:
       UP_CPP_Cache: ${{ env.UP_CPP_Cache_PFX }}-${{ steps.up-cpp-head.outputs.UP_CPP_HEAD }}
 
@@ -70,7 +72,7 @@ jobs:
       - name: Check remote head hash
         id: up-cpp-head
         shell: bash
-        run: '{ echo -n "UP_CPP_HEAD="; git ls-remote "$UP_CPP_Repo" HEAD | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
+        run: '{ echo -n "UP_CPP_HEAD="; git ls-remote "$UP_CPP_Repo" "$UP_CPP_Build_Rev" | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
 
       - name: Cache conan artifacts
         id: cache-conan2
@@ -120,6 +122,7 @@ jobs:
     env:
       UP_Client_Z_Repo: eclipse-uprotocol/up-client-zenoh-cpp
       UP_Client_Z_Cache_PFX: up-client-zenoh-conan2
+      UP_Client_Z_Build_Rev: HEAD
       Zenoh_C_Cache: ${{ needs.build-zenoh-c.outputs.Zenoh_C_Cache }}
       UP_CPP_Cache: ${{ needs.build-up-cpp.outputs.UP_CPP_Cache }}
     outputs:
@@ -129,13 +132,13 @@ jobs:
       - name: Check remote head hash
         id: up-client-zenoh-head
         shell: bash
-        run: '{ echo -n "UP_Client_Z_HEAD="; git ls-remote "https://github.com/$UP_Client_Z_Repo".git HEAD | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
+        run: '{ echo -n "UP_Client_Z_HEAD="; git ls-remote "https://github.com/$UP_Client_Z_Repo".git "$UP_Client_Z_Build_Rev" | cut -f1; } | tee -a "$GITHUB_OUTPUT"'
 
       - name: Cache client artifacts
         id: cache-z-client
         uses: actions/cache@v4
         with:
-          key: ${{ env.UP_Client_Z_Cache_PFX }}-${{ steps.up-client-zenoh-head.outputs.UP_Client_Z_HEAD }}
+          key: ${{ env.UP_Client_Z_Cache_PFX }}-${{ steps.up-client-zenoh-head.outputs.UP_Client_Z_HEAD }}-${{ env.Zenoh_C_Cache }}-${{ env.UP_CPP_Cache }}
           path: |
             ~/.conan2
             ~/local
@@ -219,10 +222,10 @@ jobs:
           mkdir build
           cd build
           conan install ..
-          cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release 
+          cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
-  
+
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
   # from branches where specific status checks have passed. These checks are
