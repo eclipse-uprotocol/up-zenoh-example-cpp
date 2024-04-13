@@ -23,16 +23,61 @@
 cmake_minimum_required(VERSION 3.20)
 project(pubsub VERSION 0.1.0 LANGUAGES CXX)
 
-find_package(up-client-zenoh-cpp REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(up-client-zenoh-cpp QUIET)
+find_package(up-cpp QUIET)
+
+add_definitions(-DSPDLOG_FMT_EXTERNAL)
+
+if(DEFINED ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LINK_FLAGS -Wl,--no-as-needed)
+    set(LIB_SEARCH -L$ENV{GITHUB_CICD_ZENOH_PATH})
+    set(ZENOH_LIBRARY -lzenohc)
+else()
+
+    if(BUILD_UNBUNDLED)
+        find_package(zenohc REQUIRED)
+        set(ZENOH_LIBRARY zenohc::lib)
+    else()
+        if(CROSS_COMPILE)
+            find_package(zenohc REQUIRED)
+            set(ZENOH_LIBRARY zenohc::lib)
+        else()
+            find_library(ZENOH_LIBRARY zenohc)
+        endif()
+    endif()
+endif()
 
 # sub
 add_executable(sub src/main_sub.cpp)
 target_link_libraries(sub
+    PUBLIC
+        up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        ${LIB_SEARCH}
+        ${ZENOH_LINK_FLAGS}
+        ${ZENOH_LIBRARY})
+
+target_include_directories(sub
+    PUBLIC
+        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
+        ${fmt_INCLUDE_DIR}
+        ${spdlog_INCLUDE_DIR}
+        ${up-cpp_INCLUDE_DIR})
 
 # pub
 add_executable(pub src/main_pub.cpp)
 target_link_libraries(pub
+    PUBLIC
+        up-client-zenoh-cpp::up-client-zenoh-cpp
     PRIVATE
-        up-client-zenoh-cpp::up-client-zenoh-cpp)
+        ${LIB_SEARCH}
+        ${ZENOH_LINK_FLAGS}
+        ${ZENOH_LIBRARY})
+
+target_include_directories(pub
+    PUBLIC
+        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
+        ${fmt_INCLUDE_DIR}
+        ${spdlog_INCLUDE_DIR}
+        ${up-cpp_INCLUDE_DIR})
