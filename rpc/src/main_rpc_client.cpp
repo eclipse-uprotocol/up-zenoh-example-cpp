@@ -29,6 +29,7 @@
 #include <up-client-zenoh-cpp/client/upZenohClient.h>
 #include <up-cpp/uuid/factory/Uuidv8Factory.h>
 #include <up-cpp/transport/builder/UAttributesBuilder.h>
+#include <string_view>
 
 #include "common.h"
 
@@ -49,14 +50,14 @@ void signalHandler(int signal) {
 }
 
 RpcResponse sendRPC(UUri& uri) {
-    
-    UPayload payload(nullptr, 0, UPayloadType::REFERENCE);
+    std::string data = "client_data";
+    UPayload payload((const uint8_t*)data.data(), data.size(), UPayloadType::REFERENCE);
    
     CallOptions options;
 
     options.set_priority(UPriority::UPRIORITY_CS4);
     /* send the RPC request , a future is returned from invokeMethod */
-    std::future<RpcResponse> result = UpZenohClient::instance()->invokeMethod(uri, payload, options);
+    std::future<RpcResponse> result = UpZenohClient::instance(BuildUAuthority().setName("rpc_client").build())->invokeMethod(uri, payload, options);
 
     if (!result.valid()) {
         spdlog::error("Future is invalid");
@@ -78,7 +79,7 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<UpZenohClient> rpcClient = UpZenohClient::instance();
+    std::shared_ptr<UpZenohClient> rpcClient = UpZenohClient::instance(BuildUAuthority().setName("rpc_client").build());
 
     /* init RPC client */
     if (nullptr == rpcClient) {
@@ -91,6 +92,8 @@ int main(int argc,
     while (!gTerminate) {
 
         auto response = sendRPC(rpcUri);
+        cout << "response.status.code()=" << response.status.code() << endl;
+        cout << "response.message.payload=" << string_view((const char*)response.message.payload().data(), response.message.payload().size()) << endl;
 
         uint64_t milliseconds = 0;
 
