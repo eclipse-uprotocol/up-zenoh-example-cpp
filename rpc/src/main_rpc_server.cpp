@@ -57,9 +57,10 @@ class RpcListener : public UListener {
 
             UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
            
-            auto builder = UAttributesBuilder::response(message.attributes().source(), message.attributes().sink(), UPriority::UPRIORITY_CS0, message.attributes().id());
-            /* Build response attributes - the same UUID should be used to send the response 
-             * it is also possible to send the response outside of the callback context */
+            auto builder = UAttributesBuilder::response(message.attributes().sink(), message.attributes().source(), UPriority::UPRIORITY_CS0, message.attributes().reqid());
+            /* Build response attributes - the request UUID should be used to send the response.
+             * Source and sink are swapped for replies since the message is going back to where it originated.
+             * It is also possible to send the response outside of the callback context */
 
             UAttributes responseAttributes = builder.build();
 
