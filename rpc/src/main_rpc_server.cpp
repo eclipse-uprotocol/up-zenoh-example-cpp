@@ -71,7 +71,7 @@ class RpcListener : public UListener {
             UMessage messageResp(responsePayload, responseAttributes);
             /* Send the response */
             cout << "sending response" << endl;
-            auto ret =  UpZenohClient::instance(BuildUAuthority().setName("rpc_server").build())->send(messageResp);
+            auto ret =  UpZenohClient::instance()->send(messageResp);
             cout << "after sending response" << endl;
             return ret;
         }
@@ -90,7 +90,9 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(BuildUAuthority().setName("rpc_server").build());
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(
+            BuildUAuthority().setName("device1").build(),
+            BuildUEntity().setName("rpc.client").setMajorVersion(1).setId(1).build());
 
     /* init zenoh utransport */
     if (nullptr == transport) {
