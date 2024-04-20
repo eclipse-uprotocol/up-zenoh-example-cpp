@@ -51,23 +51,28 @@ class RpcListener : public UListener {
     public:
        
          UStatus onReceive(UMessage &message) const override {
+            using namespace std;
+            cout << "top of onReceive" << endl;
             /* Construct response payload with the current time */
-            auto currentTime = std::chrono::system_clock::now();
-            auto duration = currentTime.time_since_epoch();
-            uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
-            UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
+            // auto currentTime = std::chrono::system_clock::now();
+            // auto duration = currentTime.time_since_epoch();
+            // uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+            // UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
+            std::string data = "server_data";
+            UPayload responsePayload((const uint8_t*)data.data(), data.size(), UPayloadType::VALUE);
            
-            auto builder = UAttributesBuilder::response(message.attributes().sink(), message.attributes().source(), UPriority::UPRIORITY_CS0, message.attributes().reqid());
-            /* Build response attributes - the request UUID should be used to send the response.
-             * Source and sink are swapped for replies since the message is going back to where it originated.
-             * It is also possible to send the response outside of the callback context */
+            auto builder = UAttributesBuilder::response(message.attributes().source(), message.attributes().sink(), UPriority::UPRIORITY_CS0, message.attributes().id());
+            /* Build response attributes - the same UUID should be used to send the response 
+             * it is also possible to send the response outside of the callback context */
 
             UAttributes responseAttributes = builder.build();
 
             UMessage messageResp(responsePayload, responseAttributes);
             /* Send the response */
-            return UpZenohClient::instance()->send(messageResp);
+            cout << "sending response" << endl;
+            auto ret =  UpZenohClient::instance()->send(messageResp);
+            cout << "after sending response" << endl;
+            return ret;
         }
 };
 
@@ -84,7 +89,9 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(
+            BuildUAuthority().setName("device1").build(),
+            BuildUEntity().setName("rpc.client").setMajorVersion(1).setId(1).build());
 
     /* init zenoh utransport */
     if (nullptr == transport) {
