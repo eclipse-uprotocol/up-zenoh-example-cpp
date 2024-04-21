@@ -94,7 +94,9 @@ int main(int argc,
     signal(SIGINT, signalHandler);
 
     UStatus status;
-    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance();
+    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(
+            BuildUAuthority().setName("device1").build(),
+            BuildUEntity().setName("sub").setMajorVersion(1).setId(2).build());
 
     /* init zenoh utransport */
     if (nullptr == transport){
