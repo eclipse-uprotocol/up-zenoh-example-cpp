@@ -82,6 +82,7 @@ int main(int argc,
     std::shared_ptr<UpZenohClient> rpcClient = UpZenohClient::instance(
             BuildUAuthority().setName("device1").build(),
             BuildUEntity().setName("rpc.client").setMajorVersion(1).setId(1).build());
+
     /* init RPC client */
     if (nullptr == rpcClient) {
         spdlog::error("init failed");
@@ -93,14 +94,14 @@ int main(int argc,
     while (!gTerminate) {
 
         auto response = sendRPC(rpcUri);
-        cout << "response.status.code()=" << response.status.code() << endl;
-        cout << "response.message.payload=" << string_view((const char*)response.message.payload().data(), response.message.payload().size()) << endl;
+        const auto& payload = response.message.payload();
 
-        uint64_t milliseconds = 0;
-
-        if (response.message.payload().data() != nullptr && response.message.payload().size() >= sizeof(uint64_t)) {
-            memcpy(&milliseconds, response.message.payload().data(), sizeof(uint64_t));
+        if (payload.data() != nullptr && payload.size() >= sizeof(uint64_t)) {
+            uint64_t milliseconds = 0;
+            memcpy(&milliseconds, payload.data(), sizeof(uint64_t));
             spdlog::info("Received = {}", milliseconds);
+        } else {
+            spdlog::error("Invalid message of size {}", payload.size());
         }
 
         sleep(1);

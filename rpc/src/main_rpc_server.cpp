@@ -51,27 +51,30 @@ class RpcListener : public UListener {
     public:
        
          UStatus onReceive(UMessage &message) const override {
-            using namespace std;
-            cout << "top of onReceive" << endl;
             /* Construct response payload with the current time */
-            // auto currentTime = std::chrono::system_clock::now();
-            // auto duration = currentTime.time_since_epoch();
-            // uint64_t currentTimeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-            // UPayload responsePayload(reinterpret_cast<const uint8_t*>(&currentTimeMilli), sizeof(currentTimeMilli), UPayloadType::VALUE);
-            std::string data = "server_data";
-            UPayload responsePayload((const uint8_t*)data.data(), data.size(), UPayloadType::VALUE);
-           
-            auto builder = UAttributesBuilder::response(message.attributes().source(), message.attributes().sink(), UPriority::UPRIORITY_CS0, message.attributes().id());
+            auto currentTime = std::chrono::system_clock::now();
+            uint64_t currentTimeMilli =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                        currentTime.time_since_epoch()).count();
+
+            UPayload responsePayload(
+                    reinterpret_cast<const uint8_t*>(&currentTimeMilli),
+                    sizeof(currentTimeMilli),
+                    UPayloadType::VALUE);
+
             /* Build response attributes - the same UUID should be used to send the response 
              * it is also possible to send the response outside of the callback context */
+            auto builder = UAttributesBuilder::response(
+                    message.attributes().sink(),
+                    message.attributes().source(),
+                    message.attributes().priority(),
+                    message.attributes().id());
 
             UAttributes responseAttributes = builder.build();
-
             UMessage messageResp(responsePayload, responseAttributes);
+
             /* Send the response */
-            cout << "sending response" << endl;
             auto ret =  UpZenohClient::instance()->send(messageResp);
-            cout << "after sending response" << endl;
             return ret;
         }
 };
