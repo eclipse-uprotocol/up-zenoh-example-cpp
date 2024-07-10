@@ -9,15 +9,26 @@ C++ Example application and service that utilizes up-client-zenoh-cpp
 
 #### up-client-zenoh-cpp dependencies
 
-1. install up-client-zenoh-cpp library https://github.com/eclipse-uprotocol/up-client-zenoh-cpp
+Use the up-conan-recipes repo and compile the following recipes:
+
+$ conan create --version 1.6.0 --build=missing up-core-api/developer
+$ conan create --version 1.0.1-rc1 --build=missing up-cpp/developer
+$ conan create --version 1.0.0-dev --build=missing up-transport-socket-cpp/developer
 
 ## How to Build 
 ```
 $ cd up-zenoh-example-cpp
-$ mkdir build
-$ cd build
+$ conan install --build=missing .
+$ cmake --preset conan-release
+$ cd build/Release
+$ cmake --build . -- -j
+```
 
-$ conan install ..
-$ cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release 
-$ cmake --build .
+## Debug Build
+```
+$ cd up-zenoh-example-cpp
+$ conan install --build=missing --settings=build_type=Debug .
+$ cmake --preset conan-debug
+$ cd build/Debug
+$ cmake --build . -- -j
 ```

@@ -24,8 +24,8 @@ cmake_minimum_required(VERSION 3.20)
 project(pubsub VERSION 0.1.0 LANGUAGES CXX)
 
 find_package(spdlog REQUIRED)
-find_package(up-client-zenoh-cpp QUIET)
-find_package(up-cpp QUIET)
+find_package(zenohcpp REQUIRED)
+find_package(up-cpp REQUIRED)
 
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
@@ -50,43 +50,31 @@ else()
 endif()
 
 # sub
-add_executable(sub src/main_sub.cpp)
+add_executable(sub src/main_sub.cpp src/UTransportDomainSockets.cpp)
 target_link_libraries(sub
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp
+        zenohcpp::lib
+        up-cpp::up-cpp
+        up-core-api::up-core-api
     PRIVATE
         ${LIB_SEARCH}
         ${ZENOH_LINK_FLAGS}
         ${ZENOH_LIBRARY})
-
 target_include_directories(sub
-    PUBLIC
-        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
-        ${fmt_INCLUDE_DIR}
-        ${spdlog_INCLUDE_DIR}
-        ${up-cpp_INCLUDE_DIR})
-
-target_include_directories(sub 
-    PRIVATE
-        include)
+	PRIVATE
+	include)
 
 # pub
-add_executable(pub src/main_pub.cpp)
+add_executable(pub src/main_pub.cpp src/UTransportDomainSockets.cpp)
 target_link_libraries(pub
     PUBLIC
-        up-client-zenoh-cpp::up-client-zenoh-cpp
+        zenohcpp::lib
+        up-cpp::up-cpp
+        up-core-api::up-core-api
     PRIVATE
         ${LIB_SEARCH}
         ${ZENOH_LINK_FLAGS}
         ${ZENOH_LIBRARY})
-
 target_include_directories(pub
-    PUBLIC
-        $ENV{CMAKE_ZENOH_INCLUDE_PATH}
-        ${fmt_INCLUDE_DIR}
-        ${spdlog_INCLUDE_DIR}
-        ${up-cpp_INCLUDE_DIR})
-
-target_include_directories(pub 
-    PRIVATE
-        include)
+	PRIVATE
+	include)
