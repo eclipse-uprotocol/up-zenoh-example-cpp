@@ -23,52 +23,30 @@
 #ifndef PUBSUB_COMMON_H
 #define PUBSUB_COMMON_H
 
-#include <up-core-api/uri.pb.h>
-#include <up-cpp/uri/builder/BuildUUri.h>
-#include <up-cpp/uri/builder/BuildUAuthority.h>
-#include <up-cpp/uri/builder/BuildEntity.h>
-#include <up-cpp/uri/builder/BuildUResource.h>
+#include <uprotocol/v1/uri.pb.h>
 
-uprotocol::v1::UUri getUri(
-        std::string_view const entName, int const entId, int const entMajorVers,
-        std::string_view const resName, int const resId) {
-
-    using namespace uprotocol::uri;
-
-    return BuildUUri()
-        .setAutority(BuildUAuthority().build())
-        .setEntity(BuildUEntity()
-                .setName(static_cast<std::string>(entName))
-                .setMajorVersion(entMajorVers)
-                .setId(entId)
-                .build())
-        .setResource(BuildUResource()
-                .setName(static_cast<std::string>(resName))
-                .setID(resId)
-                .build())
-        .build();
+uprotocol::v1::UUri getUUri(int const resource_id) {
+	uprotocol::v1::UUri uuri;
+	uuri.set_authority_name("test.app");
+	uuri.set_ue_id(0x18002);
+	uuri.set_ue_version_major(1);
+	uuri.set_resource_id(resource_id);
+	return uuri;
 }
 
-constexpr std::string_view ENTITY_NAME{"test.app"};
-constexpr int ENTITY_ID{2};
-constexpr int ENTITY_MAJOR_VERS{1};
-
-uprotocol::v1::UUri const& getTimeUri() {
-    static auto uri =
-        getUri(ENTITY_NAME, ENTITY_ID, ENTITY_MAJOR_VERS, "milliseconds", 1);
-    return uri;
+uprotocol::v1::UUri const& getTimeUUri() {
+    static auto uuri = getUUri(0x8001);
+    return uuri;
 }
 
-uprotocol::v1::UUri const& getRandomUri() {
-    static auto uri =
-        getUri(ENTITY_NAME, ENTITY_ID, ENTITY_MAJOR_VERS, "32bit", 2);
-    return uri;
+uprotocol::v1::UUri const& getRandomUUri() {
+    static auto uuri = getUUri(0x8002);
+    return uuri;
 }
 
-uprotocol::v1::UUri const& getCounterUri() {
-    static auto uri =
-        getUri(ENTITY_NAME, ENTITY_ID, ENTITY_MAJOR_VERS, "counter", 3);
-    return uri;
+uprotocol::v1::UUri const& getCounterUUri() {
+    static auto uuri = getUUri(0x8003);
+    return uuri;
 }
 
 #endif // PUBSUB_COMMON_H

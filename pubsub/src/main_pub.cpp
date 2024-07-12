@@ -21,132 +21,111 @@
  * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <iostream>
+#include <spdlog/spdlog.h>
+#include <unistd.h>
+#include <up-cpp/communication/Publisher.h>
+#include <up-cpp/datamodel/builder/Payload.h>
+
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
-#include <csignal>
-#include <unistd.h> // For sleep
-#include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/client/upZenohClient.h>
-#include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/transport/builder/UAttributesBuilder.h>
-#include <up-core-api/ustatus.pb.h>
-#include <up-core-api/uri.pb.h>
+#include <iostream>
 
+#include "UTransportDomainSockets.h"
 #include "common.h"
 
-using namespace uprotocol::utransport;
-using namespace uprotocol::uri;
-using namespace uprotocol::uuid;
+using namespace uprotocol::datamodel::builder;
+using namespace uprotocol::communication;
 using namespace uprotocol::v1;
-using namespace uprotocol::client;
 
 bool gTerminate = false;
 
 void signalHandler(int signal) {
-    if (signal == SIGINT) {
-        std::cout << "Ctrl+C received. Exiting..." << std::endl;
-        gTerminate = true;
-    }
+	if (signal == SIGINT) {
+		std::cout << "Ctrl+C received. Exiting..." << std::endl;
+		gTerminate = true;
+	}
 }
 
-std::uint8_t* getTime() {
+int64_t getTime() {
+	auto currentTime = std::chrono::system_clock::now();
+	auto duration = currentTime.time_since_epoch();
+	int64_t timeMilli =
+	    std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-    auto currentTime = std::chrono::system_clock::now();
-    auto duration = currentTime.time_since_epoch();
-    auto timeMilli = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    static std::uint8_t buf[8];
-    std::memcpy(buf, &timeMilli, sizeof(timeMilli));
-
-    return buf;
+	return timeMilli;
 }
 
-std::uint8_t* getRandom() {
-    
-    int32_t val = std::rand();
-    static std::uint8_t buf[4];
-    std::memcpy(buf, &val, sizeof(val));
-
-    return buf;
+int32_t getRandom() {
+	int32_t val = std::rand();
+	return val;
 }
 
-std::uint8_t* getCounter() {
-    
-    static std::uint8_t counter = 0;
-    ++counter;
-
-    return &counter;
-}
-
-UCode sendMessage(std::shared_ptr<UpZenohClient> transport,
-                  UUri &uri,
-                  std::uint8_t *buffer,
-                  size_t size) {
-     
-    auto builder = UAttributesBuilder::publish(uri, UPriority::UPRIORITY_CS0);
-   
-    UAttributes attributes = builder.build();
-   
-    UPayload payload(buffer, size, UPayloadType::VALUE);
-   
-    UMessage message(payload, attributes);
-
-    UStatus status = transport->send(message);
-    if (UCode::OK != status.code()) {
-        spdlog::error("send.send failed");
-        return UCode::UNAVAILABLE;
-    }
-    return UCode::OK;
+uint8_t getCounter() {
+	static std::uint8_t counter = 0;
+	++counter;
+	return counter;
 }
 
 /* The sample pub applications demonstrates how to send data using uTransport -
- * There are three topics that are published - random number, current time and a counter */
-int main(int argc, 
-         char **argv) {
+ * There are three topics that are published - random number, current time and a
+ * counter */
+int main(int argc, char** argv) {
+	(void)argc;
+	(void)argv;
 
-    (void)argc;
-    (void)argv;
-    
-    signal(SIGINT, signalHandler);
-    
-    UStatus status;
-    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(
-            BuildUAuthority().setName("device1").build(),
-            BuildUEntity().setName("pub").setMajorVersion(1).setId(1).build());
+	signal(SIGINT, signalHandler);
+	signal(SIGPIPE, signalHandler);
 
-    /* Initialize zenoh utransport */
-    if (nullptr == transport) {
-        spdlog::error("UpZenohClientinit failed");
-        return -1;
-    }
-    
-    /* Create URI objects from string URI*/
-    auto timeUri = getTimeUri();
-    auto randomUri = getRandomUri();
-    auto counterUri = getCounterUri();
+	UStatus status;
 
-    while (!gTerminate) {
-        /* send current time in milliseconds */
-        if (UCode::OK != sendMessage(transport, timeUri, getTime(), 8)) {
-            spdlog::error("sendMessage failed");
-            break;
-        }
+	auto source = getUUri(0);
+	auto topic_time = getTimeUUri();
+	auto topic_random = getRandomUUri();
+	auto topic_counter = getCounterUUri();
+	auto transport = std::make_shared<UTransportDomainSockets>(source);
+	Publisher publish_time(transport, std::move(topic_time),
+	                       UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
+	Publisher publish_random(transport, std::move(topic_random),
+	                         UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
+	Publisher publish_counter(transport, std::move(topic_counter),
+	                          UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
 
-        /* send random number */
-        if (UCode::OK != sendMessage(transport, randomUri, getRandom(), 4)) {
-            spdlog::error("sendMessage failed");
-            break;
-        }
+	while (!gTerminate) {
+		// send a string with a time value (ie "15665489")
+		uint64_t time_val = getTime();
+		spdlog::info("sending time = {}", time_val);
+		Payload string_time(std::to_string(time_val),
+		                    UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
+		status = publish_time.publish(std::move(string_time));
+		if (status.code() != UCode::OK) {
+			spdlog::error("Publish time failed.");
+			break;
+		}
 
-        /* send counter */
-        if (UCode::OK != sendMessage(transport, counterUri, getCounter(), 1)) {
-            spdlog::error("sendMessage failed");
-            break;
-        }
-        
-        sleep(1);
-    }
+		int32_t rand_val = getRandom();
+		spdlog::info("sending random = {}", rand_val);
+		Payload random_payload(std::to_string(rand_val),
+		                       UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
+		status = publish_random.publish(std::move(random_payload));
+		if (status.code() != UCode::OK) {
+			spdlog::error("Publish random failed.");
+			break;
+		}
 
-    return 0;
+		uint8_t counter_val = getCounter();
+		spdlog::info("sending counter = {}", counter_val);
+		Payload counter_payload(std::to_string(counter_val),
+		                        UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
+		status = publish_counter.publish(std::move(counter_payload));
+		if (status.code() != UCode::OK) {
+			spdlog::error("Publish counter failed.");
+			break;
+		}
+
+		sleep(1);
+	}
+
+	return 0;
 }
