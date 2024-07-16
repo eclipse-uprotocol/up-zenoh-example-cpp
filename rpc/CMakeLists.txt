@@ -50,7 +50,7 @@ else()
 endif()
 
 # rpc client
-add_executable(rpc_client src/main_rpc_client.cpp src/UTransportDomainSockets.cpp)
+add_executable(rpc_client src/main_rpc_client.cpp src/SocketUTransport.cpp)
 target_link_libraries(rpc_client
     PUBLIC
         zenohcpp::lib
@@ -65,7 +65,7 @@ target_include_directories(rpc_client
         include)
 
 # rpc server
-add_executable(rpc_server src/main_rpc_server.cpp src/UTransportDomainSockets.cpp)
+add_executable(rpc_server src/main_rpc_server.cpp src/SocketUTransport.cpp)
 target_link_libraries(rpc_server
     PUBLIC
         zenohcpp::lib

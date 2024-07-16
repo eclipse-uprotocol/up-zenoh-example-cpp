@@ -21,91 +21,83 @@
  * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <iostream>
+#include <spdlog/spdlog.h>
+#include <unistd.h>
+#include <up-cpp/communication/RpcClient.h>
+
 #include <chrono>
 #include <csignal>
-#include <unistd.h>
-#include <spdlog/spdlog.h>
-#include <up-client-zenoh-cpp/client/upZenohClient.h>
-#include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/transport/builder/UAttributesBuilder.h>
-#include <string_view>
+#include <iostream>
 
+#include "SocketUTransport.h"
 #include "common.h"
 
-using namespace uprotocol::utransport;
-using namespace uprotocol::uuid;
-using namespace uprotocol::uri;
 using namespace uprotocol::v1;
-using namespace uprotocol::rpc;
-using namespace uprotocol::client;
+using namespace uprotocol::communication;
+using namespace uprotocol::datamodel::builder;
 
 bool gTerminate = false;
 
 void signalHandler(int signal) {
-    if (signal == SIGINT) {
-        std::cout << "Ctrl+C received. Exiting..." << std::endl;
-        gTerminate = true; 
-    }
+	if (signal == SIGINT) {
+		std::cout << "Ctrl+C received. Exiting..." << std::endl;
+		gTerminate = true;
+	}
 }
 
-RpcResponse sendRPC(UUri& uri) {
-    std::string data = "client_data";
-    UPayload payload((const uint8_t*)data.data(), data.size(), UPayloadType::REFERENCE);
-   
-    CallOptions options;
+void OnReceive(RpcClient::MessageOrStatus expected) {
+	if (!expected.has_value()) {
+		UStatus status = expected.error();
+		spdlog::error("Expected value not found. -- Status: {}",
+		              status.DebugString());
+		return;
+	}
 
-    options.set_priority(UPriority::UPRIORITY_CS4);
-    /* send the RPC request , a future is returned from invokeMethod */
-    std::future<RpcResponse> result = UpZenohClient::instance()->invokeMethod(uri, payload, options);
+	UMessage message = std::move(expected).value();
 
-    if (!result.valid()) {
-        spdlog::error("Future is invalid");
-    }
-    /* wait for the future to be fullfieled - it is possible also to specify a timeout for the future */
-    result.wait();
+	if (message.attributes().payload_format() !=
+	    UPayloadFormat::UPAYLOAD_FORMAT_RAW) {
+		spdlog::error("Received message has unexpected payload format:\n{}",
+		              message.DebugString());
+		return;
+	}
 
-    return result.get();
+	if (message.payload().size() != (sizeof(uint64_t) * 3)) {
+		spdlog::error("Received message has unexpected payload size:\n{}",
+		              message.DebugString());
+		return;
+	}
+
+	// RPC response is expected to have a payload of 3 uint64_t values
+	// sequence number, current time, and random value
+	spdlog::debug("(Client) Received message: {}", message.DebugString());
+
+	const uint64_t* pdata = (uint64_t*)message.payload().data();
+	spdlog::info("Received payload: {} - {}, {}", pdata[0], pdata[1], pdata[2]);
 }
 
-/* The sample RPC client applications demonstrates how to send RPC requests and wait for the response -
- * The response in this example will be the current time */
-int main(int argc, 
-         char** argv) {
+/* The sample RPC client applications demonstrates how to send RPC requests and
+ * wait for the response
+ */
+int main(int argc, char** argv) {
+	(void)argc;
+	(void)argv;
 
-    (void)argc;
-    (void)argv;
-    
-    signal(SIGINT, signalHandler);
+	signal(SIGINT, signalHandler);
 
-    UStatus status;
-    std::shared_ptr<UpZenohClient> rpcClient = UpZenohClient::instance(
-            BuildUAuthority().setName("device1").build(),
-            BuildUEntity().setName("rpc.client").setMajorVersion(1).setId(1).build());
+	UUri source = getRpcUUri(0);
+	UUri method = getRpcUUri(12);
+	auto transport = std::make_shared<SocketUTransport>(source);
+	auto client =
+	    RpcClient(transport, std::move(method), UPriority::UPRIORITY_CS4,
+	              std::chrono::milliseconds(500));
+	RpcClient::InvokeHandle handle;
 
-    /* init RPC client */
-    if (nullptr == rpcClient) {
-        spdlog::error("init failed");
-        return -1;
-    }
+	while (!gTerminate) {
+		handle = client.invokeMethod(OnReceive);
+		sleep(1);
+	}
 
-    auto rpcUri = getRpcUri();
-
-    while (!gTerminate) {
-
-        auto response = sendRPC(rpcUri);
-        const auto& payload = response.message.payload();
-
-        if (payload.data() != nullptr && payload.size() >= sizeof(uint64_t)) {
-            uint64_t milliseconds = 0;
-            memcpy(&milliseconds, payload.data(), sizeof(uint64_t));
-            spdlog::info("Received = {}", milliseconds);
-        } else {
-            spdlog::error("Invalid message of size {}", payload.size());
-        }
-
-        sleep(1);
-    }
-
-    return 0;
+	return 0;
 }
+

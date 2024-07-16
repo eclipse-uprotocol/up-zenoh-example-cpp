@@ -111,8 +111,8 @@ v1::UStatus UTransportDomainSockets::sendImpl(const v1::UMessage& message) {
 }
 
 v1::UStatus UTransportDomainSockets::registerListenerImpl(
-    CallableConn&& listener, const v1::UUri& source_filter /* topic */,
-    std::optional<v1::UUri>&& sink_filter) {
+    const v1::UUri& sink_filter /* topic */, CallableConn&& listener,
+    std::optional<v1::UUri>&& source_filter) {
 	v1::UStatus retval;
 
 	// Start the listener thread (if not already started)
@@ -131,7 +131,7 @@ v1::UStatus UTransportDomainSockets::registerListenerImpl(
 	// Register the listener (place it in the map)
 	size_t hash = std::hash<std::string>{}(
 	    uprotocol::datamodel::serializer::uri::AsString::serialize(
-	        source_filter));
+	        sink_filter));
 	cbListeners_[hash] = listener;
 
 	retval.set_code(v1::UCode::OK);

@@ -21,106 +21,89 @@
  * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <iostream>
+#include <spdlog/spdlog.h>
+#include <unistd.h>
+#include <up-cpp/communication/RpcServer.h>
+
 #include <chrono>
 #include <csignal>
-#include <unistd.h>
-#include <up-client-zenoh-cpp/client/upZenohClient.h>
-#include <up-cpp/uuid/factory/Uuidv8Factory.h>
-#include <up-cpp/transport/builder/UAttributesBuilder.h>
-#include <spdlog/spdlog.h>
+#include <iostream>
 
+#include "SocketUTransport.h"
 #include "common.h"
 
-using namespace uprotocol::utransport;
-using namespace uprotocol::uuid;
-using namespace uprotocol::uri;
-using namespace uprotocol::client;
+using namespace uprotocol::v1;
+using namespace uprotocol::communication;
+using namespace uprotocol::datamodel::builder;
 
 bool gTerminate = false;
 
 void signalHandler(int signal) {
-    if (signal == SIGINT) {
-        std::cout << "Ctrl+C received. Exiting..." << std::endl;
-        gTerminate = true; 
-    }
+	if (signal == SIGINT) {
+		std::cout << "Ctrl+C received. Exiting..." << std::endl;
+		gTerminate = true;
+	}
 }
 
-class RpcListener : public UListener {
+std::optional<uprotocol::datamodel::builder::Payload> OnReceive(
+    const UMessage& message) {
+	// Validate message is an RPC request
+	if (message.attributes().type() != UMessageType::UMESSAGE_TYPE_REQUEST) {
+		spdlog::error("Received message is not a request\n{}",
+		              message.DebugString());
+		return {};
+	}
 
-    public:
-       
-         UStatus onReceive(UMessage &message) const override {
-            /* Construct response payload with the current time */
-            auto currentTime = std::chrono::system_clock::now();
-            uint64_t currentTimeMilli =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                        currentTime.time_since_epoch()).count();
+	// Validate message has no payload (no payload expected)
+	if (message.has_payload()) {
+		spdlog::error("Received message has non-empty payload\n{}",
+		              message.DebugString());
+		return {};
+	}
 
-            UPayload responsePayload(
-                    reinterpret_cast<const uint8_t*>(&currentTimeMilli),
-                    sizeof(currentTimeMilli),
-                    UPayloadType::VALUE);
+	// Received request with empty payload, generate response with
+	// sequence number, current time, and random value
+	static uint64_t seqNum = 0;
+	uint64_t randVal = std::rand();
+	uint64_t timeVal = std::chrono::duration_cast<std::chrono::milliseconds>(
+	                       std::chrono::system_clock::now().time_since_epoch())
+	                       .count();
+	std::vector<uint64_t> payload_data = {seqNum++, timeVal, randVal};
 
-            /* Build response attributes - the same UUID should be used to send the response 
-             * it is also possible to send the response outside of the callback context */
-            auto builder = UAttributesBuilder::response(
-                    message.attributes().sink(),
-                    message.attributes().source(),
-                    message.attributes().priority(),
-                    message.attributes().id());
+	spdlog::debug("(Server) Received request:\n{}", message.DebugString());
 
-            UAttributes responseAttributes = builder.build();
-            UMessage messageResp(responsePayload, responseAttributes);
+	Payload payload(reinterpret_cast<std::vector<uint8_t>&>(payload_data),
+	                UPayloadFormat::UPAYLOAD_FORMAT_RAW);
+	spdlog::info("Sending payload:  {} - {}, {}", payload_data[0],
+	             payload_data[1], payload_data[2]);
 
-            /* Send the response */
-            auto ret =  UpZenohClient::instance()->send(messageResp);
-            return ret;
-        }
-};
+	return payload;
+}
 
-/* The sample RPC server applications demonstrates how to receive RPC requests and send a response back to the client -
+/* The sample RPC server applications demonstrates how to receive RPC requests
+ * and send a response back to the client -
  * The response in this example will be the current time */
-int main(int argc, 
-         char** argv) {
+int main(int argc, char** argv) {
+	(void)argc;
+	(void)argv;
 
-    (void)argc;
-    (void)argv;
-    
-    RpcListener listener;
+	signal(SIGINT, signalHandler);
 
-    signal(SIGINT, signalHandler);
+	UUri source = getRpcUUri(0);
+	UUri method = getRpcUUri(12);
+	auto transport = std::make_shared<SocketUTransport>(source);
+	auto server = RpcServer::create(transport, method, OnReceive);
 
-    UStatus status;
-    std::shared_ptr<UpZenohClient> transport = UpZenohClient::instance(
-            BuildUAuthority().setName("device1").build(),
-            BuildUEntity().setName("rpc.client").setMajorVersion(1).setId(1).build());
+	if (!server.has_value()) {
+		spdlog::error("Failed to create RPC server: {}",
+		              server.error().DebugString());
+		return 1;
+	}
 
-    /* init zenoh utransport */
-    if (nullptr == transport) {
-        spdlog::error("UpZenohClient init failed");
-        return -1;
-    }
+	while (!gTerminate) {
+		sleep(1);
+	}
 
-    auto rpcUri = getRpcUri();
-
-    /* register listener to handle RPC requests */
-    status = transport->registerListener(rpcUri, listener);
-
-    if (UCode::OK != status.code()) {
-        spdlog::error("registerListener failed");
-        return -1;
-    }
-
-    while (!gTerminate) {
-        sleep(1);
-    }
-
-    status = transport->unregisterListener(rpcUri, listener);
-    if (UCode::OK != status.code()) {
-        spdlog::error("unregisterListener failed");
-        return -1;
-    }
-
-    return 0;
+	return 0;
 }
+

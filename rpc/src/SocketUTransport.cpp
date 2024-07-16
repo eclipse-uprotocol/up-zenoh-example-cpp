@@ -167,7 +167,7 @@ struct SocketUTransport::Impl {
 				    __LINE__, umsg.DebugString());
 
 				auto& attributes = umsg.attributes();
-				auto key = makeKey(attributes.sink(), attributes.source());
+				auto key = makeKey(attributes.source(), attributes.sink());
 				auto ptr = callback_data_.find(key);
 				if (ptr == nullptr) {
 					key = makeKey(attributes.sink());
@@ -195,12 +195,12 @@ struct SocketUTransport::Impl {
 		}
 	}
 
-	UStatus registerListenerImpl(const UUri& sink_filter,
-	                             CallableConn& listener,
-	                             optional<UUri>& source_filter) {
+	UStatus registerListenerImpl(CallableConn& listener,
+	                             const UUri& source_filter,
+	                             optional<UUri>&& sink_filter) {
 		UStatus retval;
 		retval.set_code(UCode::OK);
-		auto key = makeKey(sink_filter, source_filter);
+		auto key = makeKey(source_filter, sink_filter);
 		auto ptr = callback_data_.find(key, true);
 		unique_lock<mutex> lock(ptr->mtx);
 		ptr->listeners.insert(listener);
@@ -224,10 +224,11 @@ UStatus SocketUTransport::sendImpl(const UMessage& umsg) {
 	return pImpl->sendImpl(umsg);
 }
 
-UStatus SocketUTransport::registerListenerImpl(const UUri& sink_filter,
-                                               CallableConn&& listener,
-                                               optional<UUri>&& source_filter) {
-	return pImpl->registerListenerImpl(sink_filter, listener, source_filter);
+UStatus SocketUTransport::registerListenerImpl(CallableConn&& listener,
+                                               const UUri& source_filter,
+                                               optional<UUri>&& sink_filter) {
+	return pImpl->registerListenerImpl(listener, source_filter,
+	                                   std::move(sink_filter));
 }
 
 void SocketUTransport::cleanupListener(CallableConn listener) {

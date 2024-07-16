@@ -40,8 +40,8 @@ private:
 	    const uprotocol::v1::UMessage& message) override;
 
 	[[nodiscard]] uprotocol::v1::UStatus registerListenerImpl(
-	    const uprotocol::v1::UUri& sink_filter, CallableConn&& listener,
-	    std::optional<uprotocol::v1::UUri>&& source_filter) override;
+	    CallableConn&& listener, const uprotocol::v1::UUri& source_filter, 
+	    std::optional<uprotocol::v1::UUri>&& sink_filter) override;
 
 	void cleanupListener(CallableConn listener) override;
 
