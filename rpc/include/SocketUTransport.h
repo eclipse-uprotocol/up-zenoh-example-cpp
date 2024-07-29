@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-// #include <string_view>
 
 /// @class SocketUTransport
 /// @brief Represents a socket-based implementation of the UTransport interface
@@ -36,13 +35,21 @@ public:
 	                 int dispatcher_port = default_dispatcher_port);
 
 private:
+	/// @brief Send a UMessage to the dispatcher over the mocking socket.
+	/// @param[in] message The UMessage to send.
 	[[nodiscard]] uprotocol::v1::UStatus sendImpl(
 	    const uprotocol::v1::UMessage& message) override;
 
+	/// @brief Register a callback function to handle incoming UMessages.
+	/// @param[in] listener Callback object to invoke for a UMessage.
+	/// @param[in] source_filter The primary key for callback lookup.
+	/// @param[in] sink_filter An optional secondary key for callback lookup.
 	[[nodiscard]] uprotocol::v1::UStatus registerListenerImpl(
-	    CallableConn&& listener, const uprotocol::v1::UUri& source_filter, 
+	    CallableConn&& listener, const uprotocol::v1::UUri& source_filter,
 	    std::optional<uprotocol::v1::UUri>&& sink_filter) override;
 
+	/// @brief Unregister a previously registered callback object.
+	/// @param[in] listener Callback object to unregister.
 	void cleanupListener(CallableConn listener) override;
 
 	struct Impl;
