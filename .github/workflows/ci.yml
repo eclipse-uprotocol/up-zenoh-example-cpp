@@ -46,15 +46,10 @@ jobs:
         run: |
           conan create --version 1.0.1-rc1 --build=missing up-conan-recipes/up-cpp/release
 
-      - name: Build zenohc-tmp conan recipe
+      - name: Build up-transport-socket-cpp recipe
         shell: bash
         run: |
-          conan create --version 1.0.0-rc4 up-conan-recipes/zenohc-tmp/prebuilt
-
-      - name: Build zenohcpp-tmp conan recipe
-        shell: bash
-        run: |
-          conan create --version 1.0.0-rc4 up-conan-recipes/zenohcpp-tmp/from-source
+          conan create --version 1.0.0-dev --build=missing up-conan-recipes/up-transport-socket-cpp/developer
 
       - name: Build the project
         shell: bash
