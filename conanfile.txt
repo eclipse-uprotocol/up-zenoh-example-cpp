@@ -1,0 +1,16 @@
+[requires]
+up-cpp/[^1.0.1, include_prerelease]
+spdlog/[~1.13]
+up-core-api/1.6.0
+protobuf/[>=3.21.12]
+up-transport-socket-cpp/[>=1.0.0, include_prerelease]
+
+[test_requires]
+gtest/[~1.14]
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout

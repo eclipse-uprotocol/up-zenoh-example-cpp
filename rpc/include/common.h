@@ -23,28 +23,15 @@
 #ifndef RPC_COMMON_H
 #define RPC_COMMON_H
 
-#include <up-core-api/uri.pb.h>
-#include <up-cpp/uri/builder/BuildUUri.h>
-#include <up-cpp/uri/builder/BuildUAuthority.h>
-#include <up-cpp/uri/builder/BuildEntity.h>
-#include <up-cpp/uri/builder/BuildUResource.h>
+#include <uprotocol/v1/uri.pb.h>
 
-uprotocol::v1::UUri const& getRpcUri() {
-    using namespace uprotocol::uri;
-
-    static auto uri = BuildUUri()
-        .setAutority(BuildUAuthority().build())
-        .setEntity(BuildUEntity()
-                .setName("test_rpc.app")
-                .setMajorVersion(1)
-                .setId(1)
-                .build())
-        .setResource(BuildUResource()
-                .setRpcRequest("rpc.milliseconds", 1)
-                .build())
-        .build();
-
-    return uri;
+uprotocol::v1::UUri getRpcUUri(const int resource_id) {
+    uprotocol::v1::UUri uuri;
+    uuri.set_authority_name("test_rpc.app");
+    uuri.set_ue_id(0x10001);
+    uuri.set_ue_version_major(1);
+    uuri.set_resource_id(resource_id);
+    return uuri;
 }
 
 #endif // RPC_COMMON_H
