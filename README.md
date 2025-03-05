@@ -10,10 +10,11 @@ C++ Example application and service that utilizes up-client-zenoh-cpp
 #### up-client-zenoh-cpp dependencies
 
 Use the up-conan-recipes repo and compile the following recipes:
-
+```
 $ conan create --version 1.6.0 --build=missing up-core-api/developer
 $ conan create --version 1.0.1-rc1 --build=missing up-cpp/developer
 $ conan create --version 1.0.0-dev --build=missing up-transport-socket-cpp/developer
+```
 
 ## How to Build 
 ```
