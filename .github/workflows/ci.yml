@@ -39,7 +39,7 @@ jobs:
       - name: Build up-core-api conan recipe
         shell: bash
         run: |
-          conan create --version 1.6.0 up-conan-recipes/up-core-api/release
+          conan create --version 1.6.0-alpha4 up-conan-recipes/up-core-api/release
 
       - name: Build up-cpp conan recipe
         shell: bash
