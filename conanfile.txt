@@ -1,7 +1,7 @@
 [requires]
 up-cpp/[^1.0.1, include_prerelease]
 spdlog/[~1.13]
-up-core-api/1.6.0
+up-core-api/1.6.0-alpha4
 protobuf/[>=3.21.12]
 up-transport-socket-cpp/[>=1.0.0, include_prerelease]
 
