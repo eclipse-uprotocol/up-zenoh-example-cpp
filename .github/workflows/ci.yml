@@ -28,7 +28,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: up-zenoh-example-cpp
-          repository: eclipse-uprotocol/up-zenoh-example-cpp
 
       - name: Fetch up-cpp conan recipe
         uses: actions/checkout@v4
