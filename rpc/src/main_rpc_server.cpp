@@ -24,17 +24,19 @@
 #include <spdlog/spdlog.h>
 #include <unistd.h>
 #include <up-cpp/communication/RpcServer.h>
+#include <up-transport-zenoh-cpp/ZenohUTransport.h>
 
 #include <chrono>
 #include <csignal>
+#include <filesystem>
 #include <iostream>
 
-#include "SocketUTransport.h"
 #include "common.h"
 
 using namespace uprotocol::v1;
 using namespace uprotocol::communication;
 using namespace uprotocol::datamodel::builder;
+using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 
 bool gTerminate = false;
 
@@ -87,11 +89,16 @@ int main(int argc, char** argv) {
 	(void)argc;
 	(void)argv;
 
-	signal(SIGINT, signalHandler);
+	if (argc < 2) {
+		std::cout << "No Zenoh config has been provided" << std::endl;
+		std::cout << "Usage: rpc_server <config_file>" << std::endl;
+		return 1;
+	}
 
+	signal(SIGINT, signalHandler);
 	UUri source = getRpcUUri(0);
 	UUri method = getRpcUUri(12);
-	auto transport = std::make_shared<SocketUTransport>(source);
+	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	auto server = RpcServer::create(transport, method, OnReceive);
 
 	if (!server.has_value()) {
@@ -106,4 +113,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-

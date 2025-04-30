@@ -1,9 +1,10 @@
 [requires]
-up-cpp/[^1.0.1, include_prerelease]
+up-cpp/1.0.1-dev
 spdlog/[~1.13]
-up-core-api/1.6.0
+up-core-api/1.6.0-alpha4
 protobuf/[>=3.21.12]
-up-transport-socket-cpp/[>=1.0.0, include_prerelease]
+up-transport-zenoh-cpp/1.0.0-dev
+zenohcpp/1.2.1
 
 [test_requires]
 gtest/[~1.14]

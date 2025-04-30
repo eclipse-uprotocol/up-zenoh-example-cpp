@@ -35,18 +35,18 @@ uprotocol::v1::UUri getUUri(int const resource_id) {
 }
 
 uprotocol::v1::UUri const& getTimeUUri() {
-    static auto uuri = getUUri(0x8001);
-    return uuri;
+	static auto uuri = getUUri(0x8001);
+	return uuri;
 }
 
 uprotocol::v1::UUri const& getRandomUUri() {
-    static auto uuri = getUUri(0x8002);
-    return uuri;
+	static auto uuri = getUUri(0x8002);
+	return uuri;
 }
 
 uprotocol::v1::UUri const& getCounterUUri() {
-    static auto uuri = getUUri(0x8003);
-    return uuri;
+	static auto uuri = getUUri(0x8003);
+	return uuri;
 }
 
-#endif // PUBSUB_COMMON_H
+#endif  // PUBSUB_COMMON_H

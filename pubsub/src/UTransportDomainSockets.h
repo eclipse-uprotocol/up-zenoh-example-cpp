@@ -42,7 +42,7 @@ private:
 
 	void notifyListener(const v1::UMessage& message);
 	void listenThread();  // listen for incoming messages (thread)
-	void cleanupListener(CallableConn listener) override {}
+	void cleanupListener(const CallableConn& listener) override {}
 };  // class UTransportDomainSockets
 
 #endif  // UTRANSPORT_DOMAIN_SOCKETS_H
