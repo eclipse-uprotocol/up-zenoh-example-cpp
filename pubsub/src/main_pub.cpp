@@ -1,43 +1,31 @@
-/*
- * Copyright (c) 2024 General Motors GTO LLC
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- * SPDX-FileType: SOURCE
- * SPDX-FileCopyrightText: 2024 General Motors GTO LLC
- * SPDX-License-Identifier: Apache-2.0
- */
+//  SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
+//
+//  See the NOTICE file(s) distributed with this work for additional
+//  information regarding copyright ownership.
+//
+//  This program and the accompanying materials are made available under the
+//  terms of the Apache License Version 2.0 which is available at
+//  https://www.apache.org/licenses/LICENSE-2.0
+//
+//  SPDX-License-Identifier: Apache-2.0
+//
 #include <spdlog/spdlog.h>
 #include <unistd.h>
 #include <up-cpp/communication/Publisher.h>
 #include <up-cpp/datamodel/builder/Payload.h>
+#include <up-transport-zenoh-cpp/ZenohUTransport.h>
 
 #include <chrono>
 #include <csignal>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
 
-#include "UTransportDomainSockets.h"
 #include "common.h"
 
 using namespace uprotocol::datamodel::builder;
 using namespace uprotocol::communication;
 using namespace uprotocol::v1;
+
+using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 
 bool gTerminate = false;
 
@@ -75,6 +63,12 @@ int main(int argc, char** argv) {
 	(void)argc;
 	(void)argv;
 
+	if (argc < 2) {
+		std::cout << "No Zenoh config has been provided" << std::endl;
+		std::cout << "Usage: pub <config_file>" << std::endl;
+		return 1;
+	}
+
 	signal(SIGINT, signalHandler);
 	signal(SIGPIPE, signalHandler);
 
@@ -84,7 +78,7 @@ int main(int argc, char** argv) {
 	auto topic_time = getTimeUUri();
 	auto topic_random = getRandomUUri();
 	auto topic_counter = getCounterUUri();
-	auto transport = std::make_shared<UTransportDomainSockets>(source);
+	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	Publisher publish_time(transport, std::move(topic_time),
 	                       UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
 	Publisher publish_random(transport, std::move(topic_random),
