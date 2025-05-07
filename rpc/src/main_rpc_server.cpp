@@ -21,6 +21,8 @@
 
 #include "common.h"
 
+constexpr uint32_t METHOD_RPC_RESOURCE_ID = 12;
+
 using UMessage =  uprotocol::v1::UMessage;
 using UPayloadFormat = uprotocol::v1::UPayloadFormat;
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
@@ -87,7 +89,7 @@ int main(int argc, char** argv) {
 
 	signal(SIGINT, signalHandler);
 	uprotocol::v1::UUri source = getRpcUUri(0);
-	uprotocol::v1::UUri method = getRpcUUri(12);
+	uprotocol::v1::UUri method = getRpcUUri(METHOD_RPC_RESOURCE_ID);
 	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	auto server = uprotocol::communication::RpcServer::create(transport, method, OnReceive);
 
