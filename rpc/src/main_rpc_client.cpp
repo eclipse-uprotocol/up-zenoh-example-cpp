@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <up-cpp/communication/RpcClient.h>
 #include <up-transport-zenoh-cpp/ZenohUTransport.h>
+#include <uprotocol/v1/ustatus.pb.h>
 
 #include <chrono>
 #include <csignal>
@@ -21,23 +22,27 @@
 
 #include "common.h"
 
-using namespace uprotocol::v1;
-using namespace uprotocol::communication;
-using namespace uprotocol::datamodel::builder;
+constexpr uint32_t METHOD_RPC_RESOURCE_ID = 12;
+constexpr std::chrono::milliseconds RPCCLIENT_TTL(500);
+
+using UMessage =  uprotocol::v1::UMessage;
+using UStatus =  uprotocol::v1::UStatus;
+using UPayloadFormat = uprotocol::v1::UPayloadFormat;
+using RpcClient = uprotocol::communication::RpcClient;
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 
-bool gTerminate = false;
+bool g_terminate = false;
 
 void signalHandler(int signal) {
 	if (signal == SIGINT) {
 		std::cout << "Ctrl+C received. Exiting..." << std::endl;
-		gTerminate = true;
+		g_terminate = true;
 	}
 }
 
 void OnReceive(RpcClient::MessageOrStatus expected) {
 	if (!expected.has_value()) {
-		UStatus status = expected.error();
+		const UStatus& status = expected.error();
 		spdlog::error("Expected value not found. -- Status: {}",
 		              status.DebugString());
 		return;
@@ -81,15 +86,15 @@ int main(int argc, char** argv) {
 
 	signal(SIGINT, signalHandler);
 
-	UUri source = getRpcUUri(0);
-	UUri method = getRpcUUri(12);
+	uprotocol::	v1::UUri source = getRpcUUri(0);
+	uprotocol::	v1::UUri method = getRpcUUri(METHOD_RPC_RESOURCE_ID);
 	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	auto client =
-	    RpcClient(transport, std::move(method), UPriority::UPRIORITY_CS4,
-	              std::chrono::milliseconds(500));
+	    RpcClient(transport, std::move(method), uprotocol::	v1::UPriority::UPRIORITY_CS4,
+	              std::chrono::milliseconds(RPCCLIENT_TTL));
 	RpcClient::InvokeHandle handle;
 
-	while (!gTerminate) {
+	while (!g_terminate) {
 		handle = client.invokeMethod(OnReceive);
 		sleep(1);
 	}

@@ -18,36 +18,39 @@
 #include <chrono>
 #include <csignal>
 #include <iostream>
+#include <random>
 
 #include "common.h"
 
-using namespace uprotocol::datamodel::builder;
-using namespace uprotocol::communication;
-using namespace uprotocol::v1;
-
+using Payload = uprotocol::datamodel::builder::Payload;
+using Publisher = uprotocol::communication::Publisher;
+using UPayloadFormat = uprotocol::v1::UPayloadFormat;
+using UCode = uprotocol::v1::UCode;
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 
-bool gTerminate = false;
+bool g_terminate = false;
 
 void signalHandler(int signal) {
 	if (signal == SIGINT) {
 		std::cout << "Ctrl+C received. Exiting..." << std::endl;
-		gTerminate = true;
+		g_terminate = true;
 	}
 }
 
 int64_t getTime() {
-	auto currentTime = std::chrono::system_clock::now();
-	auto duration = currentTime.time_since_epoch();
-	int64_t timeMilli =
+	auto current_time = std::chrono::system_clock::now();
+	auto duration = current_time.time_since_epoch();
+	int64_t time_milli =
 	    std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-	return timeMilli;
+	return time_milli;
 }
 
 int32_t getRandom() {
-	int32_t val = std::rand();
-	return val;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int32_t> distribution(0, INT32_MAX);
+	return distribution(gen);
 }
 
 uint8_t getCounter() {
@@ -72,7 +75,7 @@ int main(int argc, char** argv) {
 	signal(SIGINT, signalHandler);
 	signal(SIGPIPE, signalHandler);
 
-	UStatus status;
+	uprotocol::v1::UStatus status;
 
 	auto source = getUUri(0);
 	auto topic_time = getTimeUUri();
@@ -86,7 +89,7 @@ int main(int argc, char** argv) {
 	Publisher publish_counter(transport, std::move(topic_counter),
 	                          UPayloadFormat::UPAYLOAD_FORMAT_TEXT);
 
-	while (!gTerminate) {
+	while (!g_terminate) {
 		// send a string with a time value (ie "15665489")
 		uint64_t time_val = getTime();
 		spdlog::info("sending time = {}", time_val);
