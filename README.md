@@ -11,8 +11,8 @@ C++ Example application and service that utilizes up-transport-zenoh-cpp
 
 Use the up-conan-recipes repo and compile the following recipes:
 ```
-$ conan create --version 1.6.0 --build=missing up-core-api/developer
-$ conan create --version 1.0.1-rc1 --build=missing up-cpp/developer
+$ conan create --version 1.6.0-alpha4 --build=missing up-core-api/release
+$ conan create --version 1.0.1-dev --build=missing up-cpp/developer
 $ conan create --version 1.0.0-dev --build=missing up-transport-zenoh-cpp/developer
 ```
 
