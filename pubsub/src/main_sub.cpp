@@ -13,23 +13,25 @@
 #include <unistd.h>
 #include <up-cpp/communication/Subscriber.h>
 #include <up-transport-zenoh-cpp/ZenohUTransport.h>
+#include <uprotocol/v1/umessage.pb.h>
 
 #include <csignal>
 #include <iostream>
 
 #include "common.h"
 
-using namespace uprotocol::communication;
-using namespace uprotocol::v1;
+using Subscriber = uprotocol::communication::Subscriber;
+using UMessage = uprotocol::v1::UMessage;
+using UPayloadFormat = uprotocol::v1::UPayloadFormat;
 
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 
-bool gTerminate = false;
+bool g_terminate = false;
 
 void signalHandler(int signal) {
 	if (signal == SIGINT) {
 		std::cout << "Ctrl+C received. Exiting..." << std::endl;
-		gTerminate = true;
+		g_terminate = true;
 	}
 }
 
@@ -64,9 +66,8 @@ void onReceiveCounter(const uprotocol::v1::UMessage& message) {
  * -
  * There are three topics that are received - random number, current time and a
  * counter */
-int main(int argc, char** argv) {
-	(void)argc;
-	(void)argv;
+int main(int argc, char* argv[]) {
+	std::vector<std::string> args(argv, argv + argc);
 
 	if (argc < 2) {
 		std::cout << "No Zenoh config has been provided" << std::endl;
@@ -74,24 +75,23 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	signal(SIGINT, signalHandler);
-	signal(SIGPIPE, signalHandler);
+	(void)signal(SIGINT, signalHandler);
+	(void)signal(SIGPIPE, signalHandler);
 
-	UStatus status;
-	UUri source = getUUri(0);
-	auto topic_time = getTimeUUri();
-	auto topic_random = getRandomUUri();
-	auto topic_counter = getCounterUUri();
-	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
+	uprotocol::v1::UStatus status;
+	uprotocol::v1::UUri source = getUUri(0);
+	const auto& topic_time = getTimeUUri();
+	const auto& topic_random = getRandomUUri();
+	const auto& topic_counter = getCounterUUri();
+	auto transport = std::make_shared<ZenohUTransport>(source, args.at(1));
 
-	auto resTime =
-	    Subscriber::subscribe(transport, std::move(topic_time), onReceiveTime);
-	auto resRandom = Subscriber::subscribe(transport, std::move(topic_random),
-	                                       onReceiveRandom);
-	auto resCounter = Subscriber::subscribe(transport, std::move(topic_counter),
-	                                        onReceiveCounter);
+	auto res_time = Subscriber::subscribe(transport, topic_time, onReceiveTime);
+	auto res_random =
+	    Subscriber::subscribe(transport, topic_random, onReceiveRandom);
+	auto res_counter =
+	    Subscriber::subscribe(transport, topic_counter, onReceiveCounter);
 
-	while (!gTerminate) {
+	while (!g_terminate) {
 		sleep(1);
 	}
 
