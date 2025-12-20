@@ -9,8 +9,8 @@
 //
 //  SPDX-License-Identifier: Apache-2.0
 //
-#ifndef RPC_COMMON_H
-#define RPC_COMMON_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <uprotocol/v1/uri.pb.h>
 constexpr uint32_t RPC_UE_ID = 0x10001;
@@ -24,4 +24,4 @@ inline uprotocol::v1::UUri getRpcUUri(const int resource_id) {
 	return uuri;
 }
 
-#endif  // RPC_COMMON_H
+#endif  // COMMON_H

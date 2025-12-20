@@ -9,33 +9,38 @@
 //
 //  SPDX-License-Identifier: Apache-2.0
 //
-#ifndef PUBSUB_COMMON_H
-#define PUBSUB_COMMON_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <uprotocol/v1/uri.pb.h>
 
-uprotocol::v1::UUri getUUri(int const resource_id) {
+constexpr int DUMMY_UE_ID = 0x18002;
+constexpr int TIMER_RESOURCE_ID = 0x8001;
+constexpr int RANDOM_RESOURCE_ID = 0x8002;
+constexpr int COUNTER_RESOURCE_ID = 0x8003;
+
+inline uprotocol::v1::UUri getUUri(int const resource_id) {
 	uprotocol::v1::UUri uuri;
 	uuri.set_authority_name("test.app");
-	uuri.set_ue_id(0x18002);
+	uuri.set_ue_id(DUMMY_UE_ID);
 	uuri.set_ue_version_major(1);
 	uuri.set_resource_id(resource_id);
 	return uuri;
 }
 
-uprotocol::v1::UUri const& getTimeUUri() {
-	static auto uuri = getUUri(0x8001);
+inline uprotocol::v1::UUri const& getTimeUUri() {
+	static auto uuri = getUUri(TIMER_RESOURCE_ID);
 	return uuri;
 }
 
-uprotocol::v1::UUri const& getRandomUUri() {
-	static auto uuri = getUUri(0x8002);
+inline uprotocol::v1::UUri const& getRandomUUri() {
+	static auto uuri = getUUri(RANDOM_RESOURCE_ID);
 	return uuri;
 }
 
-uprotocol::v1::UUri const& getCounterUUri() {
-	static auto uuri = getUUri(0x8003);
+inline uprotocol::v1::UUri const& getCounterUUri() {
+	static auto uuri = getUUri(COUNTER_RESOURCE_ID);
 	return uuri;
 }
 
-#endif  // PUBSUB_COMMON_H
+#endif  // COMMON_H

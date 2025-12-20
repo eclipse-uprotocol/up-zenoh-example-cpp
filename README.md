@@ -35,10 +35,10 @@ $ cmake --build . -- -j
 ```
 
 ## Usage
-After completing the project build, the build artifacts can generally be found in the `build/Release/bin` directory within your workspace.
-You can run the example using the supplied configuration file located in the `/resources` directory.For instance, to run the RPC example, use the following commands:
+After building the project, the build artifacts can generally be found in the `build/Release/bin` directory within your workspace.
+You can run the example using the supplied configuration file located in the `/resources` directory. For instance, to run the RPC example, use the following commands:
 
-```bash
+```
 $ ./rpc_server <path/to/config>
 $ ./rpc_client <path/to/config>
 ```

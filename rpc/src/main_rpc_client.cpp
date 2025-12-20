@@ -91,13 +91,12 @@ int main(int argc, char* argv[]) {
 	UUri source = getRpcUUri(0);
 	UUri method = getRpcUUri(METHOD_RPC_RESOURCE_ID);
 	auto transport = std::make_shared<ZenohUTransport>(source, args.at(1));
-	auto client = RpcClient(transport, std::move(method),
-	                        uprotocol::v1::UPriority::UPRIORITY_CS4,
+	auto client = RpcClient(transport, uprotocol::v1::UPriority::UPRIORITY_CS4,
 	                        std::chrono::milliseconds(RPCCLIENT_TTL));
 	RpcClient::InvokeHandle handle;
 
 	while (!g_terminate) {
-		handle = client.invokeMethod(OnReceive);
+		handle = client.invokeMethod(method, OnReceive);
 		sleep(1);
 	}
 
